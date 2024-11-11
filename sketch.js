@@ -80,6 +80,52 @@ class Player
 					ballCount--;
 				}
 				break;
+			case 6:
+				console.log("Stun Player");
+				this.stunPaddles(5000);
+				break;
+			case 7:
+				console.log("Faster Balls");
+				this.setEffectText(ball.side, "Faster Balls");
+				balls.forEach(element => {
+					if(element.xSpeed > 0)
+					{
+						element.xSpeed++;
+					}
+					else
+					{
+						element.xSpeed--;
+					}
+				});
+				break;
+			case 8:
+				console.log("Rocket Balls");
+				this.setEffectText(ball.side, "Rocket Balls");
+				balls.forEach(element => {
+					if(element.xSpeed > 0)
+					{
+						element.xSpeed = 10;
+					}
+					else
+					{
+						element.xSpeed = -10;
+					}
+				});
+				break;
+			case 9:
+				console.log("Reverse Trajectory");
+				this.setEffectText(ball.side, "Reverse Trajectory");
+				balls.forEach(element => {
+					if(element.xSpeed > 0 && ball.side === "right")
+					{
+						element.xSpeed *= -1;
+					}
+					else if(element.xSpeed < 0 && ball.side === "left")
+					{
+						element.xSpeed *= -1;
+					}
+				});
+				break;
 			default:
 				console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
 		}
@@ -259,11 +305,11 @@ class Ball
 		if(this.bounces >= bounceThreshold)
 		{
 			//Checks which side the ball bounces last. Changes xSpeed depending on the last side.
-			if(this.side === "right")
+			if(this.side === "right" && this.xSpeed > -10)
 			{
 				this.xSpeed--;
 			}
-			else
+			else if(this.side === "left" && this.xSpeed < 10)
 			{
 				this.xSpeed++;
 			}
@@ -275,9 +321,9 @@ class Ball
 //Constant variables
 const maxPaddles = 1;
 const maxBalls = 100;
-const winningScore = 10;
+const winningScore = 25;
 const bounceThreshold = 3;
-const effectCount = 6;
+const effectCount = 10;
 const baseEffectTimer = 120;
 
 //Other variables
