@@ -25,12 +25,14 @@ class Player
 		switch(Math.floor(random(0,4))){
 			case 0:
 				console.log("Faster Paddles");
+				this.setEffectText(ball.side, "Faster Paddles");
 				this.paddles.forEach(element => {
 					element.speed++;
 				});
 				break;
 			case 1:
 				console.log("Slower Paddles");
+				this.setEffectText(ball.side, "Slower Paddles");
 				this.paddles.forEach(element => {
 					if(element.speed > 1)
 					{
@@ -40,12 +42,14 @@ class Player
 				break;
 			case 2:
 				console.log("Longer Paddles");
+				this.setEffectText(ball.side, "Longer Paddles");
 				this.paddles.forEach(element => {
 					element.sprite.h += 10;
 				});
 				break;
 			case 3:
 				console.log("Shorter Paddles");
+				this.setEffectText(ball.side, "Shorter Paddles");
 				this.paddles.forEach(element => {
 					if(element.h > 10)
 					{
@@ -55,6 +59,19 @@ class Player
 				break;
 			default:
 				console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
+		}
+	}
+
+	setEffectText(side, effect)
+	{
+		effectTimer = baseEffectTimer;
+		if(side === "left")
+		{
+			leftEffectText = effect;
+		}
+		else
+		{
+			rightEffectText = effect;
 		}
 	}
 }
@@ -209,6 +226,7 @@ const maxBalls = 100;
 const winningScore = 10;
 const bounceThreshold = 3;
 const effectCount = 4;
+const baseEffectTimer = 120;
 
 //Other variables
 let gameOver = false;
@@ -235,6 +253,11 @@ let ballGroup;
 //Players
 let leftPlayer;
 let rightPlayer;
+
+//Effect Trackers
+let leftEffectText = "";
+let rightEffectText = "";
+let effectTimer = baseEffectTimer;
 
 function setup() {
 	new Canvas(canvasArea, canvasArea);
@@ -277,6 +300,17 @@ function draw() {
 	fill('white');
 	text(leftPlayer.points,100,100);
 	text(rightPlayer.points,canvasArea - 100, 100);
+	
+	//Create the effect Trackers
+	effectTimer--;
+	if(effectTimer <= 0)
+	{
+		leftEffectText = "";
+		rightEffectText = "";
+	}
+	text(leftEffectText, 200,150);
+	text(rightEffectText,canvasArea - 200, 150);
+
 
 	if(gameOver)
 	{
