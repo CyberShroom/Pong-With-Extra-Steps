@@ -20,9 +20,10 @@ class Player
 		}
 	}
 
+	//Applies a random effect to the player
 	createEffect()
 	{
-		switch(Math.floor(random(0,4))){
+		switch(Math.floor(random(0,effectCount))){
 			case 0:
 				console.log("Faster Paddles");
 				this.setEffectText(ball.side, "Faster Paddles");
@@ -57,11 +58,34 @@ class Player
 					}
 				});
 				break;
+			case 4:
+				console.log("Duplicate Ball");
+				this.setEffectText(ball.side, "Duplicate Ball");
+				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter);
+				ballCount++;
+				break;
+			case 5:
+				if(ballCount === 1)
+				{
+					console.log("Attempted to remove ball but failed. Stunning player for their transgressions.")
+					this.stunPaddles(5000);
+				}
+				else
+				{
+					console.log("Remove Ball");
+					this.setEffectText(ball.side, "Remove Ball");
+					balls[ballCount - 1].sprite.remove();
+					balls.splice(ballCount - 1, 1);
+					
+					ballCount--;
+				}
+				break;
 			default:
 				console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
 		}
 	}
 
+	//Sets the text of the effect text to the effect
 	setEffectText(side, effect)
 	{
 		effectTimer = baseEffectTimer;
@@ -73,6 +97,28 @@ class Player
 		{
 			rightEffectText = effect;
 		}
+	}
+
+	//Prevents moving paddles while active
+	stunPaddles(time)
+	{
+		this.setEffectText(ball.side, "Stun Paddles for " + time / 1000 + " Seconds");
+		
+		this.paddles.forEach(element => {
+			element.isStunned = true;
+		});
+
+		setTimeout(() => {
+			this.removeStun();
+		}, time);
+	}
+
+	//Allows moving paddles again
+	removeStun()
+	{
+		this.paddles.forEach(element => {
+			element.isStunned = false;
+		});
 	}
 }
 
@@ -88,11 +134,14 @@ class Paddle
 		this.sprite.h = h;
 		this.sprite.color = 'white';
 		this.speed = 1;
+		this.isStunned = false;
 	}
 
 	//Moves the paddle up and down.
 	movePaddle(isUp)
 	{
+		if(this.isStunned) return;
+
 		if(isUp && this.sprite.y > upperBounds + this.sprite.halfHeight)
 		{
 			this.sprite.y -= this.speed;
@@ -193,14 +242,17 @@ class Ball
 		//Increments bounces and increases x speed if the bounce threshold is met
 		this.bounces++
 
-		//Changes last bounce and creates an effect for the player
-		if(this.side === "left")
+		//Creates an effect for the player only if the ball is the main ball
+		if(this.isMainBall === true)
 		{
-			leftPlayer.createEffect();
-		}
-		else
-		{
-			rightPlayer.createEffect();
+			if(this.side === "left")
+				{
+					leftPlayer.createEffect();
+				}
+				else
+				{
+					rightPlayer.createEffect();
+				}
 		}
 		
 		//Increases ball speed when the threshhold has been met
@@ -225,7 +277,7 @@ const maxPaddles = 1;
 const maxBalls = 100;
 const winningScore = 10;
 const bounceThreshold = 3;
-const effectCount = 4;
+const effectCount = 6;
 const baseEffectTimer = 120;
 
 //Other variables
@@ -245,6 +297,7 @@ let rightPaddle;
 
 //The ball
 let ball;
+let ballCount = 1;
 
 //Balls array
 let balls = new Array(maxBalls);
