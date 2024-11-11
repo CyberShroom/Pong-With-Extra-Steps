@@ -4,6 +4,8 @@ class Player
 	constructor()
 	{
 		this.points = 0;
+		this.paddles = new Array(maxPaddles);
+		this.paddleGroup = new Group();
 	}
 
 	//Increments the players points. Ends the game upon reaching 10.
@@ -15,6 +17,24 @@ class Player
 		{
 			winningPlayer = player;
 			gameOver = true;
+		}
+	}
+
+	createEffect()
+	{
+		let randNumber = random(1,effectCount + 1);
+		switch(randNumber){
+			case 0:
+				paddles.forEach(element => {
+					
+				});
+				break;
+			case 1:
+				;
+				break;
+			case 2:
+				;
+				break;
 		}
 	}
 }
@@ -62,6 +82,7 @@ class Ball
 		ballGroup.add(this.sprite);
 		this.bounces = 0;
 		this.lastBounce = "left";
+		this.isMainBall = false;
 	}
 
 	//Moves the ball every frame
@@ -131,11 +152,13 @@ class Ball
 			{
 				this.lastBounce = "right";
 				this.xSpeed--;
+				rightPlayer.createEffect();
 			}
 			else if(this.lastBounce === "right")
 			{
 				this.lastBounce = "left";
 				this.xSpeed++;
+				leftPlayer.createEffect();
 			}
 			this.bounces = 0;
 		}
@@ -147,6 +170,7 @@ const maxPaddles = 1;
 const maxBalls = 100;
 const winningScore = 10;
 const bounceThreshold = 3;
+const effectCount = 3;
 
 //Other variables
 let gameOver = false;
@@ -163,12 +187,6 @@ let lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; //The lower and right b
 let leftPaddle;
 let rightPaddle;
 
-//Paddle arrays
-let leftPlayerPaddles = new Array(maxPaddles);
-let rightPlayerPaddles = new Array(maxPaddles);
-let leftPaddleGroup;
-let rightPaddleGroup;
-
 //The ball
 let ball;
 
@@ -177,8 +195,8 @@ let balls = new Array(maxBalls);
 let ballGroup;
 
 //Players
-const leftPlayer = new Player();
-const rightPlayer = new Player();
+let leftPlayer;
+let rightPlayer;
 
 function setup() {
 	new Canvas(canvasArea, canvasArea);
@@ -186,23 +204,26 @@ function setup() {
 	rectMode('center');
 	textAlign("center");
 
+	//Players
+	leftPlayer = new Player();
+	rightPlayer = new Player();
+
 	//Create Sprite Groups
-	leftPaddleGroup = new Group();
-	rightPaddleGroup = new Group();
 	ballGroup = new Group();
 
 	//Create the paddles and add them to their array and group
 	leftPaddle = new Paddle(upperBounds + 5, canvasArea / 2, 10, 50);
 	rightPaddle = new Paddle(lowerBounds - 5, canvasArea / 2, 10, 50);
 
-	leftPlayerPaddles[0] = leftPaddle;
-	leftPaddleGroup.add(leftPaddle.sprite);
+	leftPlayer.paddles[0] = leftPaddle;
+	leftPlayer.paddleGroup.add(leftPaddle.sprite);
 
-	rightPlayerPaddles[0] = rightPaddle;
-	rightPaddleGroup.add(rightPaddle.sprite);
+	rightPlayer.paddles[0] = rightPaddle;
+	rightPlayer.paddleGroup.add(rightPaddle.sprite);
 
 	//Create the ball
 	ball = new Ball(canvasArea / 2, canvasArea / 2, 5);
+	ball.isMainBall = true;
 	balls[0] = ball;
 }
 
@@ -251,8 +272,8 @@ function draw() {
 	});
 
 	//Check for ball collisions
-	ballGroup.overlaps(leftPaddleGroup,onPaddleCollision);
-	ballGroup.overlaps(rightPaddleGroup,onPaddleCollision);
+	ballGroup.overlaps(leftPlayer.paddleGroup,onPaddleCollision);
+	ballGroup.overlaps(rightPlayer.paddleGroup,onPaddleCollision);
 }
 
 //Reverse the trajectory of a ball that collides with a paddle
