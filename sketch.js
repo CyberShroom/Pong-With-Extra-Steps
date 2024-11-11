@@ -22,18 +22,36 @@ class Player
 
 	createEffect()
 	{
-		let randNumber = random(1,effectCount + 1);
-		switch(randNumber){
+		switch(random(1,effectCount + 1)){
 			case 0:
+				console.log("Faster Paddles");
 				paddles.forEach(element => {
-					
+					element.speed++;
 				});
 				break;
 			case 1:
-				;
+				console.log("Slower Paddles");
+				paddles.forEach(element => {
+					if(element.speed > 1)
+					{
+						element.speed--;
+					}
+				});
 				break;
 			case 2:
-				;
+				console.log("Longer Paddles");
+				paddles.forEach(element => {
+					element.h += 10;
+				});
+				break;
+			case 3:
+				console.log("Shorter Paddles");
+				paddles.forEach(element => {
+					if(element.h > 10)
+					{
+						element.h -= 10;
+					}
+				});
 				break;
 		}
 	}
@@ -81,7 +99,7 @@ class Ball
 		this.ySpeed = random(-0.5,0.5);
 		ballGroup.add(this.sprite);
 		this.bounces = 0;
-		this.lastBounce = "left";
+		this.side = "right";
 		this.isMainBall = false;
 	}
 
@@ -114,6 +132,16 @@ class Ball
 		//Moves the ball forward based on its speed.
 		this.sprite.x += this.xSpeed;
 		this.sprite.y += this.ySpeed;
+
+		//Checks what side of the play area the ball is on. Used to handle what player to act on.
+		if(this.sprite.x > canvasArea / 2)
+		{
+			this.side = "right";
+		}
+		else
+		{
+			this.side = "left";
+		}
 	}
 
 	//Sets the balls location to the origin and changes its y speed
@@ -141,24 +169,32 @@ class Ball
 	}
 
 	//increments bounces
-	incrementBounces()
+	bounceHandler()
 	{
 		//Increments bounces and increases x speed if the bounce threshold is met
-		this.bounces++;
+		this.bounces++
+
+		//Changes last bounce and creates an effect for the player
+		if(this.side === "left")
+		{
+			leftPlayer.createEffect();
+		}
+		else
+		{
+			rightPlayer.createEffect();
+		}
+		
+		//Increases ball speed when the threshhold has been met
 		if(this.bounces >= bounceThreshold)
 		{
 			//Checks which side the ball bounces last. Changes xSpeed depending on the last side.
-			if(this.lastBounce === "left")
+			if(this.side === "right")
 			{
-				this.lastBounce = "right";
 				this.xSpeed--;
-				rightPlayer.createEffect();
 			}
-			else if(this.lastBounce === "right")
+			else
 			{
-				this.lastBounce = "left";
 				this.xSpeed++;
-				leftPlayer.createEffect();
 			}
 			this.bounces = 0;
 		}
@@ -170,7 +206,7 @@ const maxPaddles = 1;
 const maxBalls = 100;
 const winningScore = 10;
 const bounceThreshold = 3;
-const effectCount = 3;
+const effectCount = 4;
 
 //Other variables
 let gameOver = false;
@@ -288,5 +324,5 @@ function onPaddleCollision(targetBall, targetPaddle)
 	balls[targetIndex].xSpeed *= -1;
 	
 	//Increments bounces and increases x speed if the bounce threshold is met
-	balls[targetIndex].incrementBounces();
+	balls[targetIndex].bounceHandler();
 }
