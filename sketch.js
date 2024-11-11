@@ -22,16 +22,16 @@ class Player
 
 	createEffect()
 	{
-		switch(random(1,effectCount + 1)){
+		switch(Math.floor(random(0,4))){
 			case 0:
 				console.log("Faster Paddles");
-				paddles.forEach(element => {
+				this.paddles.forEach(element => {
 					element.speed++;
 				});
 				break;
 			case 1:
 				console.log("Slower Paddles");
-				paddles.forEach(element => {
+				this.paddles.forEach(element => {
 					if(element.speed > 1)
 					{
 						element.speed--;
@@ -40,19 +40,21 @@ class Player
 				break;
 			case 2:
 				console.log("Longer Paddles");
-				paddles.forEach(element => {
-					element.h += 10;
+				this.paddles.forEach(element => {
+					element.sprite.h += 10;
 				});
 				break;
 			case 3:
 				console.log("Shorter Paddles");
-				paddles.forEach(element => {
+				this.paddles.forEach(element => {
 					if(element.h > 10)
 					{
-						element.h -= 10;
+						element.sprite.h -= 10;
 					}
 				});
 				break;
+			default:
+				console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
 		}
 	}
 }
