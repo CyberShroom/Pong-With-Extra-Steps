@@ -61,14 +61,13 @@ class Player
 			case 4:
 				console.log("Duplicate Ball");
 				this.setEffectText(ball.side, "Duplicate Ball");
-				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter);
+				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				ballCount++;
 				break;
 			case 5:
 				if(ballCount === 1)
 				{
-					console.log("Attempted to remove ball but failed. Stunning player for their transgressions.")
-					this.stunPaddles(5000);
+					this.createEffect();
 				}
 				else
 				{
@@ -202,7 +201,7 @@ class Paddle
 //Ball class
 class Ball
 {
-	constructor(x,y,diameter)
+	constructor(x,y,diameter,index)
 	{
 		this.sprite = new Sprite()
 		this.sprite.x = x;
@@ -215,6 +214,7 @@ class Ball
 		this.bounces = 0;
 		this.side = "right";
 		this.isMainBall = false;
+		this.index = index;
 	}
 
 	//Moves the ball every frame
@@ -266,6 +266,11 @@ class Ball
 		this.ySpeed = random(-0.5,0.5);
 		this.xSpeed = 1;
 		this.bounces = 0;
+
+		if(this.isMainBall === false)
+		{
+			removeBall(this.index);
+		}
 	}
 
 	//Changes the y speed of the ball
@@ -314,17 +319,24 @@ class Ball
 				this.xSpeed++;
 			}
 			this.bounces = 0;
+
+			//Create a global modifier
+			if(this.isMainBall)
+			{
+				createGlobalEffect();
+			}
 		}
 	}
 }
 
 //Constant variables
-const maxPaddles = 1;
+const maxPaddles = 4;
 const maxBalls = 100;
 const winningScore = 25;
 const bounceThreshold = 3;
 const effectCount = 10;
 const baseEffectTimer = 120;
+const globalEffectCount = 5;
 
 //Other variables
 let gameOver = false;
@@ -356,6 +368,7 @@ let rightPlayer;
 //Effect Trackers
 let leftEffectText = "";
 let rightEffectText = "";
+let centerEffectText = "";
 let effectTimer = baseEffectTimer;
 
 function setup() {
@@ -382,9 +395,11 @@ function setup() {
 	rightPlayer.paddleGroup.add(rightPaddle.sprite);
 
 	//Create the ball
-	ball = new Ball(canvasArea / 2, canvasArea / 2, 5);
+	ball = new Ball(canvasArea / 2, canvasArea / 2, 5, 0);
 	ball.isMainBall = true;
 	balls[0] = ball;
+	ball.sprite.color = 'red';
+	ball.sprite.stroke = 'red';
 }
 
 function draw() {
@@ -397,8 +412,8 @@ function draw() {
 	//Creates the score trackers
 	textSize(48);
 	fill('white');
-	text(leftPlayer.points,100,100);
-	text(rightPlayer.points,canvasArea - 100, 100);
+	text(leftPlayer.points,100,50);
+	text(rightPlayer.points,canvasArea - 100, 50);
 	
 	//Create the effect Trackers
 	effectTimer--;
@@ -407,8 +422,9 @@ function draw() {
 		leftEffectText = "";
 		rightEffectText = "";
 	}
-	text(leftEffectText, 200,150);
-	text(rightEffectText,canvasArea - 200, 150);
+	text(leftEffectText, 200,100);
+	text(rightEffectText,canvasArea - 200, 100);
+	text(centerEffectText, canvasArea / 2, 50);
 
 
 	if(gameOver)
@@ -420,21 +436,29 @@ function draw() {
 	//Player 1 controls
 	if(keyIsDown("87"))
 	{
-		leftPaddle.movePaddle(true);
+		leftPlayer.paddles.forEach(element => {
+			element.movePaddle(true);
+		});
 	}
 	if(keyIsDown("83"))
 	{
-		leftPaddle.movePaddle(false);
+		leftPlayer.paddles.forEach(element => {
+			element.movePaddle(false);
+		});
 	}
 
 	//Player 2 controls
 	if(keyIsDown(UP_ARROW))
 	{
-		rightPaddle.movePaddle(true);
+		rightPlayer.paddles.forEach(element => {
+			element.movePaddle(true);
+		});
 	}
 	if(keyIsDown(DOWN_ARROW))
 	{
-		rightPaddle.movePaddle(false);
+		rightPlayer.paddles.forEach(element => {
+			element.movePaddle(false);
+		});
 	}
 
 	//Make every ball in play move
@@ -460,4 +484,114 @@ function onPaddleCollision(targetBall, targetPaddle)
 	
 	//Increments bounces and increases x speed if the bounce threshold is met
 	balls[targetIndex].bounceHandler();
+}
+
+//Creates a global modifier
+function createGlobalEffect()
+{
+	switch(Math.floor(random(0,globalEffectCount))){
+		case 0:
+			console.log("Ballsplosion");
+			centerEffectText = "Ballsplosion";
+			balls[ballCount] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount);
+			balls[ballCount].ySpeed = 1.0;
+			balls[ballCount + 1] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 1);
+			balls[ballCount + 1].ySpeed = 0.0;
+			balls[ballCount + 2] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 2);
+			balls[ballCount + 2].ySpeed = -1.0;
+			balls[ballCount + 3] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 3);
+			balls[ballCount + 3].xSpeed = -1.0;
+			balls[ballCount + 3].ySpeed = -1.0;
+			balls[ballCount + 4] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 4);
+			balls[ballCount + 4].xSpeed = -1.0;
+			balls[ballCount + 4].ySpeed = 0.0;
+			balls[ballCount + 5] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 5);
+			balls[ballCount + 5].xSpeed = -1.0;
+			balls[ballCount + 5].ySpeed = 1.0;
+			ballCount += 6;
+			break;
+		case 1:
+			if(typeof leftPlayer.paddles[3] === 'undefined')
+			{
+				console.log("Wii Sports");
+				centerEffectText = "Wii Sports";
+
+				leftPlayer.paddles[3] = new Paddle(canvasArea / 2 - 25, canvasArea / 2, 10, 50);
+				leftPlayer.paddleGroup.add(leftPlayer.paddles[3].sprite);
+
+				rightPlayer.paddles[3] = new Paddle(canvasArea / 2 + 25, canvasArea / 2, 10, 50);
+				rightPlayer.paddleGroup.add(rightPlayer.paddles[3].sprite);
+
+				setTimeout(() => {
+					removeWiiSportsPaddles();
+				}, 10000);
+			}
+			else
+			{
+				createGlobalEffect();
+			}
+			break;
+		case 2:
+			console.log("Inverted Controls");
+			centerEffectText = "";
+			createGlobalEffect();
+			break;
+		case 3:
+			if(playArea < maxArea)
+			{
+				console.log("Bigger Area");
+				centerEffectText = "Bigger Area";
+				playArea += 50;
+				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
+				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
+				leftPlayer.paddles[0].sprite.x = upperBounds + 5;
+				rightPlayer.paddles[0].sprite.x = lowerBounds - 5;
+			}
+			else
+			{
+				createGlobalEffect();
+			}
+			break;
+		case 4:
+			if(playArea > 200)
+			{
+				console.log("Lower Area");
+				centerEffectText = "Lower Area";
+				playArea -= 50;
+				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
+				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
+				leftPlayer.paddles[0].sprite.x = upperBounds + 5;
+				rightPlayer.paddles[0].sprite.x = lowerBounds - 5;
+			}
+			else
+			{
+				createGlobalEffect();
+			}
+			break;
+		default:
+			console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
+	}
+}
+
+function removeBall(index)
+{
+	balls[index].sprite.remove();
+	balls.splice(index,1);
+	ballCount--;
+
+	balls.forEach(element => {
+		if(element.index > index)
+		{
+			element.index--;
+		}
+	});
+}
+
+function removeWiiSportsPaddles()
+{
+	leftPlayer.paddles[3].sprite.remove();
+	leftPlayer.paddles.splice(3,1);
+
+	rightPlayer.paddles[3].sprite.remove();
+	rightPlayer.paddles.splice(3,1);
 }
