@@ -17,6 +17,7 @@ class Player
 		{
 			winningPlayer = player;
 			gameOver = true;
+			soundVictory.play();
 		}
 	}
 
@@ -27,6 +28,7 @@ class Player
 			case 0:
 				console.log("Faster Paddles");
 				this.setEffectText(ball.side, "Faster Paddles");
+				soundGood.play();
 				this.paddles.forEach(element => {
 					element.speed++;
 				});
@@ -34,6 +36,7 @@ class Player
 			case 1:
 				console.log("Slower Paddles");
 				this.setEffectText(ball.side, "Slower Paddles");
+				soundBad.play();
 				this.paddles.forEach(element => {
 					if(element.speed > 1)
 					{
@@ -44,6 +47,7 @@ class Player
 			case 2:
 				console.log("Longer Paddles");
 				this.setEffectText(ball.side, "Longer Paddles");
+				soundGood.play();
 				this.paddles.forEach(element => {
 					element.sprite.h += 10;
 				});
@@ -51,6 +55,7 @@ class Player
 			case 3:
 				console.log("Shorter Paddles");
 				this.setEffectText(ball.side, "Shorter Paddles");
+				soundBad.play();
 				this.paddles.forEach(element => {
 					if(element.h > 10)
 					{
@@ -61,6 +66,7 @@ class Player
 			case 4:
 				console.log("Duplicate Ball");
 				this.setEffectText(ball.side, "Duplicate Ball");
+				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				ballCount++;
 				break;
@@ -81,6 +87,7 @@ class Player
 				break;
 			case 6:
 				console.log("Stun Player");
+				soundBad.play();
 				this.stunPaddles(5000);
 				break;
 			case 7:
@@ -114,6 +121,7 @@ class Player
 			case 9:
 				console.log("Reverse Trajectory");
 				this.setEffectText(ball.side, "Reverse Trajectory");
+				soundGood.play();
 				balls.forEach(element => {
 					if(element.xSpeed > 0 && ball.side === "right")
 					{
@@ -215,6 +223,10 @@ class Ball
 		this.side = "right";
 		this.isMainBall = false;
 		this.index = index;
+		this.soundHit = loadSound("Sounds/Hit.mp3");
+		this.soundHit.volume = this.soundHit.volume / 2;
+		this.soundScore = loadSound("Sounds/score.mp3");
+		this.soundScore.volume = this.soundScore.volume / 2;
 	}
 
 	//Moves the ball every frame
@@ -261,6 +273,7 @@ class Ball
 	//Sets the balls location to the origin and changes its y speed
 	returnToOrigin()
 	{
+		this.soundScore.play();
 		this.sprite.x = canvasArea / 2;
 		this.sprite.y = canvasArea / 2;
 		this.ySpeed = random(-0.5,0.5);
@@ -292,6 +305,7 @@ class Ball
 	{
 		//Increments bounces and increases x speed if the bounce threshold is met
 		this.bounces++
+		this.soundHit.play();
 
 		//Creates an effect for the player only if the ball is the main ball
 		if(this.isMainBall === true)
@@ -371,11 +385,24 @@ let rightEffectText = "";
 let centerEffectText = "";
 let effectTimer = baseEffectTimer;
 
+//Sounds
+let soundGood;
+let soundBad;
+let soundBackground;
+let soundVictory;
+
 function setup() {
 	new Canvas(canvasArea, canvasArea);
 	displayMode('centered');
 	rectMode('center');
 	textAlign("center");
+
+	
+	//Sounds
+	soundGood = loadSound("Sounds/good.mp3");
+	soundBad = loadSound("Sounds/bad.mp3");
+	soundBackground = loadSound("Sounds/background.mp3");
+	soundVictory = loadSound("Sounds/victory.mp3");
 
 	//Players
 	leftPlayer = new Player();
@@ -400,6 +427,9 @@ function setup() {
 	balls[0] = ball;
 	ball.sprite.color = 'red';
 	ball.sprite.stroke = 'red';
+
+	soundBackground.volume = soundBackground.volume / 2;
+	soundBackground.play();
 }
 
 function draw() {
