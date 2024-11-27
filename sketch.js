@@ -77,9 +77,7 @@ class Player
 					console.log("Shield");
 					this.setEffectText(ball.side, "Shield", "green");
 					soundGood.play();
-					this.shieldCount = 5;
-					soundShield.play();
-					this.paddles[0].sprite.color = 'blue';
+					this.addShield(5);
 				}
 				else
 				{
@@ -167,6 +165,13 @@ class Player
 			this.paddles[0].sprite.color = 'blue';
 		}
 	}
+
+	addShield(amount)
+	{
+		this.shieldCount += amount;
+		this.paddles[0].sprite.color = "blue";
+		soundShield.play();
+	}
 }
 
 //Paddle class
@@ -222,6 +227,7 @@ class Ball
 		this.soundScore = loadSound("Sounds/score.mp3");
 		this.soundScore.volume = this.soundScore.volume / 2;
 		this.soundParry = loadSound("Sounds/parry.mp3");
+		this.startRight = true;
 	}
 
 	//Moves the ball every frame
@@ -301,7 +307,17 @@ class Ball
 		this.sprite.x = canvasArea / 2;
 		this.sprite.y = canvasArea / 2;
 		this.ySpeed = random(-0.5,0.5);
-		this.xSpeed = 1;
+		if(this.startRight)
+		{
+			this.xSpeed = 1;
+			this.startRight = false;
+		}
+		else
+		{
+			this.xSpeed = -1;
+			this.startRight = true;
+		}
+		
 		this.bounces = 0;
 
 		if(this.isMainBall === false)
@@ -420,6 +436,7 @@ let soundBackground;
 let soundVictory;
 let soundJumpscare;
 let soundShield;
+let soundParty;
 let hasInteracted = false;
 
 //Images
@@ -439,6 +456,7 @@ function setup() {
 	soundVictory = loadSound("Sounds/victory.mp3");
 	soundJumpscare = loadSound("Sounds/jumpscare.mp3");
 	soundShield = loadSound("Sounds/shield.mp3");
+	soundParty = loadSound("Sounds/party.mp3");
 
 	//images
 	jumpscareAnimation = loadAni("Pictures/jumpscare_animation_folder/frame0.jpg", 19);
@@ -700,11 +718,24 @@ function createGlobalEffect()
 		case 7:
 			console.log("Party Mode")
 			centerEffectText = "Party Mode";
+			soundParty.play();
 			partyModeState = 0;
 			partyMode();
 			setTimeout(() => {
 				removePartyMode();
 			}, 10000);
+			leftPlayer.shieldCount *= 2;
+			rightPlayer.shieldCount *= 2;
+			leftPlayer.addShield(1);
+			rightPlayer.addShield(1);
+			leftPlayer.paddles.forEach(element => {
+				element.speed++;
+				element.sprite.h += 50;
+			});
+			rightPlayer.paddles.forEach(element => {
+				element.speed++;
+				element.sprite.h += 50;
+			});
 			break;
 		case 8:
 			break;
