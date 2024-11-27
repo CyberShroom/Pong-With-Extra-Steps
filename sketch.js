@@ -125,6 +125,7 @@ class Player
 		
 		this.paddles.forEach(element => {
 			element.isStunned = true;
+			element.sprite.color = 'yellow';
 		});
 
 		setTimeout(() => {
@@ -137,6 +138,7 @@ class Player
 	{
 		this.paddles.forEach(element => {
 			element.isStunned = false;
+			element.sprite.color = 'white';
 		});
 	}
 }
@@ -321,6 +323,7 @@ const globalEffectCount = 10;
 //Other variables
 let gameOver = false;
 let winningPlayer;
+let jumpscare = false;
 
 //Canvas variables
 let playArea = 400;
@@ -358,7 +361,11 @@ let soundGood;
 let soundBad;
 let soundBackground;
 let soundVictory;
+let soundJumpscare;
 let hasInteracted = false;
+
+//Images
+let jumpscareAnimation;
 
 function setup() {
 	new Canvas(canvasArea, canvasArea);
@@ -372,6 +379,10 @@ function setup() {
 	soundBad = loadSound("Sounds/bad.mp3");
 	soundBackground = loadSound("Sounds/background.mp3");
 	soundVictory = loadSound("Sounds/victory.mp3");
+	soundJumpscare = loadSound("Sounds/jumpscare.mp3");
+
+	//images
+	jumpscareAnimation = loadAni("Pictures/jumpscare_animation_folder/frame0.jpg", 19);
 
 	//Players
 	leftPlayer = new Player();
@@ -419,6 +430,7 @@ function draw() {
 	{
 		leftEffectText = "";
 		rightEffectText = "";
+		centerEffectText = "";
 		leftTextColor = "white";
 		rightTextColor = "white";
 	}
@@ -482,6 +494,11 @@ function draw() {
 	if(soundBackground.isPlaying() === false && hasInteracted === true)
 	{
 		soundBackground.play();
+	}
+
+	if(jumpscare)
+	{
+		animation(jumpscareAnimation, canvasArea / 2, canvasArea / 2, 0, 8, 8);
 	}
 }
 
@@ -547,9 +564,12 @@ function createGlobalEffect()
 			}
 			break;
 		case 2:
-			console.log("Inverted Controls");
-			centerEffectText = "";
-			createGlobalEffect();
+			console.log("JUMPSCARE!");
+			jumpscare = true;
+			soundJumpscare.play();
+			setTimeout(() => {
+				jumpscareTimer();
+			}, 1500);
 			break;
 		case 3:
 			if(playArea < maxArea)
@@ -643,4 +663,9 @@ function removeWiiSportsPaddles()
 
 	rightPlayer.paddles[3].sprite.remove();
 	rightPlayer.paddles.splice(3,1);
+}
+
+function jumpscareTimer()
+{
+	jumpscare = false;
 }
