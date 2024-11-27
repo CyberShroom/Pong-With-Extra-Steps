@@ -324,6 +324,7 @@ const globalEffectCount = 10;
 let gameOver = false;
 let winningPlayer;
 let jumpscare = false;
+let partyModeState = -1;
 
 //Canvas variables
 let playArea = 400;
@@ -632,6 +633,13 @@ function createGlobalEffect()
 			});
 			break;
 		case 7:
+			console.log("Party Mode")
+			centerEffectText = "Party Mode";
+			partyModeState = 0;
+			partyMode();
+			setTimeout(() => {
+				removePartyMode();
+			}, 10000);
 			break;
 		case 8:
 			break;
@@ -668,4 +676,117 @@ function removeWiiSportsPaddles()
 function jumpscareTimer()
 {
 	jumpscare = false;
+}
+
+function partyMode()
+{
+	if(partyModeState === 0)
+	{
+		balls.forEach(element => {
+			element.sprite.color = "orange";
+		});
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "blue";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "blue";
+		});
+
+		partyModeState = 1;
+	}
+	else if(partyModeState === 1)
+	{
+		balls.forEach(element => {
+			element.sprite.color = "yellow";
+		});
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "green";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "green";
+		});
+
+		partyModeState = 2;
+	}
+	else if(partyModeState === 2)
+	{
+		balls.forEach(element => {
+			element.sprite.color = "green";
+		});
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "yellow";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "yellow";
+		});
+
+		partyModeState = 3;
+	}
+	else if(partyModeState === 3)
+	{
+		balls.forEach(element => {
+			element.sprite.color = "blue";
+		});
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "orange";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "orange";
+		});
+
+		partyModeState = 4;
+	}
+	else if(partyModeState === 4)
+	{
+		balls.forEach(element => {
+			element.sprite.color = "purple";
+		});
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "red";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "red";
+		});
+
+		partyModeState = 5;
+	}
+	else if(partyModeState === 5)
+	{
+		balls.forEach(element => {
+			element.sprite.color = "red";
+		});
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "purple";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "purple";
+		});
+
+		partyModeState = 0;
+	}
+
+	if(partyModeState !== -1)
+	{
+		setTimeout(() => {
+			partyMode();
+		}, 100);
+	}
+	else
+	{
+		balls.forEach(element => {
+			element.sprite.color = "white";
+		});
+		balls[0].sprite.color = "red";
+		leftPlayer.paddles.forEach(element => {
+			element.sprite.color = "white";
+		});
+		rightPlayer.paddles.forEach(element => {
+			element.sprite.color = "white";
+		});
+	}
+}
+
+function removePartyMode()
+{
+	partyModeState = -1;
 }
