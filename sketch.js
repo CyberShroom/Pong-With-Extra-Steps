@@ -6,6 +6,7 @@ class Player
 		this.points = 0;
 		this.paddles = new Array(maxPaddles);
 		this.paddleGroup = new Group();
+		this.shieldCount = 0;
 	}
 
 	//Increments the players points. Ends the game upon reaching 10.
@@ -71,7 +72,19 @@ class Player
 				ballCount++;
 				break;
 			case 5:
-				
+				if(this.shieldCount === 0)
+				{
+					console.log("Shield");
+					this.setEffectText(ball.side, "Shield", "green");
+					soundGood.play();
+					this.shieldCount = 5;
+					soundShield.play();
+					this.paddles[0].sprite.color = 'blue';
+				}
+				else
+				{
+					this.createEffect();
+				}
 				break;
 			case 6:
 				console.log("Stun Player");
@@ -138,8 +151,21 @@ class Player
 	{
 		this.paddles.forEach(element => {
 			element.isStunned = false;
+		});
+
+		this.resetPaddleColor();
+	}
+
+	resetPaddleColor()
+	{
+		this.paddles.forEach(element => {
 			element.sprite.color = 'white';
 		});
+
+		if(this.shieldCount !== 0)
+		{
+			this.paddles[0].sprite.color = 'blue';
+		}
 	}
 }
 
@@ -195,6 +221,7 @@ class Ball
 		this.soundHit.volume = this.soundHit.volume / 2;
 		this.soundScore = loadSound("Sounds/score.mp3");
 		this.soundScore.volume = this.soundScore.volume / 2;
+		this.soundParry = loadSound("Sounds/parry.mp3");
 	}
 
 	//Moves the ball every frame
@@ -214,13 +241,42 @@ class Ball
 		//Checks if the ball has scored, grants a point to the player, and resets the balls location.
 		if(this.sprite.x >= lowerBounds)
 		{
-			leftPlayer.addPoints("left");
-			this.returnToOrigin();
+			if(rightPlayer.shieldCount === 0)
+			{
+				leftPlayer.addPoints("left");
+				this.returnToOrigin();
+			}
+			else
+			{
+				this.soundParry.play();
+				rightPlayer.shieldCount--;
+				this.xSpeed *= -1;
+
+				if(rightPlayer.shieldCount === 0)
+				{
+					rightPlayer.paddles[0].sprite.color = 'white';
+				}
+			}
+			
 		}
 		else if(this.sprite.x <= upperBounds)
 		{
-			rightPlayer.addPoints("right");
-			this.returnToOrigin();
+			if(leftPlayer.shieldCount === 0)
+			{
+				rightPlayer.addPoints("left");
+				this.returnToOrigin();
+			}
+			else
+			{
+				this.soundParry.play();
+				leftPlayer.shieldCount--;
+				this.xSpeed *= -1;
+
+				if(leftPlayer.shieldCount === 0)
+				{
+					leftPlayer.paddles[0].sprite.color = 'white';
+				}
+			}
 		}
 
 		//Moves the ball forward based on its speed.
@@ -363,6 +419,7 @@ let soundBad;
 let soundBackground;
 let soundVictory;
 let soundJumpscare;
+let soundShield;
 let hasInteracted = false;
 
 //Images
@@ -381,6 +438,7 @@ function setup() {
 	soundBackground = loadSound("Sounds/background.mp3");
 	soundVictory = loadSound("Sounds/victory.mp3");
 	soundJumpscare = loadSound("Sounds/jumpscare.mp3");
+	soundShield = loadSound("Sounds/shield.mp3");
 
 	//images
 	jumpscareAnimation = loadAni("Pictures/jumpscare_animation_folder/frame0.jpg", 19);
@@ -420,8 +478,15 @@ function draw() {
 	rect(canvasArea / 2, canvasArea / 2, playArea, playArea);
 
 	//Creates the score trackers
+	textSize(24);
+	fill('blue');
+	stroke('blue');
+	text(leftPlayer.shieldCount,150,50);
+	text(rightPlayer.shieldCount,canvasArea - 150,50);
+
 	textSize(48);
 	fill('white');
+	stroke('white');
 	text(leftPlayer.points,100,50);
 	text(rightPlayer.points,canvasArea - 100, 50);
 	
@@ -777,12 +842,8 @@ function partyMode()
 			element.sprite.color = "white";
 		});
 		balls[0].sprite.color = "red";
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "white";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "white";
-		});
+		leftPlayer.resetPaddleColor();
+		rightPlayer.resetPaddleColor();
 	}
 }
 
