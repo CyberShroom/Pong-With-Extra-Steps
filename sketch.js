@@ -27,7 +27,7 @@ class Player
 		switch(Math.floor(random(0,effectCount))){
 			case 0:
 				console.log("Faster Paddles");
-				this.setEffectText(ball.side, "Faster Paddles");
+				this.setEffectText(ball.side, "Faster Paddles", "green");
 				soundGood.play();
 				this.paddles.forEach(element => {
 					element.speed++;
@@ -35,7 +35,7 @@ class Player
 				break;
 			case 1:
 				console.log("Slower Paddles");
-				this.setEffectText(ball.side, "Slower Paddles");
+				this.setEffectText(ball.side, "Slower Paddles", "red");
 				soundBad.play();
 				this.paddles.forEach(element => {
 					if(element.speed > 1)
@@ -46,7 +46,7 @@ class Player
 				break;
 			case 2:
 				console.log("Longer Paddles");
-				this.setEffectText(ball.side, "Longer Paddles");
+				this.setEffectText(ball.side, "Longer Paddles", "green");
 				soundGood.play();
 				this.paddles.forEach(element => {
 					element.sprite.h += 10;
@@ -54,7 +54,7 @@ class Player
 				break;
 			case 3:
 				console.log("Shorter Paddles");
-				this.setEffectText(ball.side, "Shorter Paddles");
+				this.setEffectText(ball.side, "Shorter Paddles", "red");
 				soundBad.play();
 				this.paddles.forEach(element => {
 					if(element.h > 10)
@@ -65,25 +65,13 @@ class Player
 				break;
 			case 4:
 				console.log("Duplicate Ball");
-				this.setEffectText(ball.side, "Duplicate Ball");
+				this.setEffectText(ball.side, "Duplicate Ball", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				ballCount++;
 				break;
 			case 5:
-				if(ballCount === 1)
-				{
-					this.createEffect();
-				}
-				else
-				{
-					console.log("Remove Ball");
-					this.setEffectText(ball.side, "Remove Ball");
-					balls[ballCount - 1].sprite.remove();
-					balls.splice(ballCount - 1, 1);
-					
-					ballCount--;
-				}
+				
 				break;
 			case 6:
 				console.log("Stun Player");
@@ -91,36 +79,12 @@ class Player
 				this.stunPaddles(5000);
 				break;
 			case 7:
-				console.log("Faster Balls");
-				this.setEffectText(ball.side, "Faster Balls");
-				balls.forEach(element => {
-					if(element.xSpeed > 0)
-					{
-						element.xSpeed++;
-					}
-					else
-					{
-						element.xSpeed--;
-					}
-				});
 				break;
 			case 8:
-				console.log("Rocket Balls");
-				this.setEffectText(ball.side, "Rocket Balls");
-				balls.forEach(element => {
-					if(element.xSpeed > 0)
-					{
-						element.xSpeed = 10;
-					}
-					else
-					{
-						element.xSpeed = -10;
-					}
-				});
 				break;
 			case 9:
 				console.log("Reverse Trajectory");
-				this.setEffectText(ball.side, "Reverse Trajectory");
+				this.setEffectText(ball.side, "Reverse Trajectory", "green");
 				soundGood.play();
 				balls.forEach(element => {
 					if(element.xSpeed > 0 && ball.side === "right")
@@ -139,23 +103,25 @@ class Player
 	}
 
 	//Sets the text of the effect text to the effect
-	setEffectText(side, effect)
+	setEffectText(side, effect, color)
 	{
 		effectTimer = baseEffectTimer;
 		if(side === "left")
 		{
 			leftEffectText = effect;
+			leftTextColor = color;
 		}
 		else
 		{
 			rightEffectText = effect;
+			rightTextColor = color;
 		}
 	}
 
 	//Prevents moving paddles while active
 	stunPaddles(time)
 	{
-		this.setEffectText(ball.side, "Stun Paddles for " + time / 1000 + " Seconds");
+		this.setEffectText(ball.side, "Stun Paddles for " + time / 1000 + " Seconds", "red");
 		
 		this.paddles.forEach(element => {
 			element.isStunned = true;
@@ -350,7 +316,7 @@ const winningScore = 25;
 const bounceThreshold = 3;
 const effectCount = 10;
 const baseEffectTimer = 120;
-const globalEffectCount = 5;
+const globalEffectCount = 10;
 
 //Other variables
 let gameOver = false;
@@ -384,12 +350,15 @@ let leftEffectText = "";
 let rightEffectText = "";
 let centerEffectText = "";
 let effectTimer = baseEffectTimer;
+let leftTextColor = "white";
+let rightTextColor = "white";
 
 //Sounds
 let soundGood;
 let soundBad;
 let soundBackground;
 let soundVictory;
+let hasInteracted = false;
 
 function setup() {
 	new Canvas(canvasArea, canvasArea);
@@ -429,7 +398,6 @@ function setup() {
 	ball.sprite.stroke = 'red';
 
 	soundBackground.volume = soundBackground.volume / 2;
-	soundBackground.play();
 }
 
 function draw() {
@@ -451,11 +419,18 @@ function draw() {
 	{
 		leftEffectText = "";
 		rightEffectText = "";
+		leftTextColor = "white";
+		rightTextColor = "white";
 	}
+	fill(leftTextColor);
+	stroke(leftTextColor);
 	text(leftEffectText, 200,100);
+	fill(rightTextColor);
+	stroke(rightTextColor);
 	text(rightEffectText,canvasArea - 200, 100);
+	fill('white');
+	stroke('white');
 	text(centerEffectText, canvasArea / 2, 50);
-
 
 	if(gameOver)
 	{
@@ -466,12 +441,14 @@ function draw() {
 	//Player 1 controls
 	if(keyIsDown("87"))
 	{
+		hasInteracted = true;
 		leftPlayer.paddles.forEach(element => {
 			element.movePaddle(true);
 		});
 	}
 	if(keyIsDown("83"))
 	{
+		hasInteracted = true;
 		leftPlayer.paddles.forEach(element => {
 			element.movePaddle(false);
 		});
@@ -480,12 +457,14 @@ function draw() {
 	//Player 2 controls
 	if(keyIsDown(UP_ARROW))
 	{
+		hasInteracted = true;
 		rightPlayer.paddles.forEach(element => {
 			element.movePaddle(true);
 		});
 	}
 	if(keyIsDown(DOWN_ARROW))
 	{
+		hasInteracted = true;
 		rightPlayer.paddles.forEach(element => {
 			element.movePaddle(false);
 		});
@@ -499,6 +478,11 @@ function draw() {
 	//Check for ball collisions
 	ballGroup.overlaps(leftPlayer.paddleGroup,onPaddleCollision);
 	ballGroup.overlaps(rightPlayer.paddleGroup,onPaddleCollision);
+
+	if(soundBackground.isPlaying() === false && hasInteracted === true)
+	{
+		soundBackground.play();
+	}
 }
 
 //Reverse the trajectory of a ball that collides with a paddle
@@ -527,13 +511,14 @@ function createGlobalEffect()
 			balls[ballCount].ySpeed = 1.0;
 			balls[ballCount + 1] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 1);
 			balls[ballCount + 1].ySpeed = 0.0;
+			balls[ballCount + 1].xSpeed *= 2;
 			balls[ballCount + 2] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 2);
 			balls[ballCount + 2].ySpeed = -1.0;
 			balls[ballCount + 3] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 3);
 			balls[ballCount + 3].xSpeed = -1.0;
 			balls[ballCount + 3].ySpeed = -1.0;
 			balls[ballCount + 4] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 4);
-			balls[ballCount + 4].xSpeed = -1.0;
+			balls[ballCount + 4].xSpeed = -2.0;
 			balls[ballCount + 4].ySpeed = 0.0;
 			balls[ballCount + 5] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 5);
 			balls[ballCount + 5].xSpeed = -1.0;
@@ -597,6 +582,40 @@ function createGlobalEffect()
 			{
 				createGlobalEffect();
 			}
+			break;
+		case 5:
+			console.log("Faster Balls");
+			centerEffectText = "Faster Balls";
+			balls.forEach(element => {
+				if(element.xSpeed > 0)
+				{
+					element.xSpeed++;
+				}
+				else
+				{
+					element.xSpeed--;
+				}
+			});
+			break;
+		case 6:
+			console.log("Rocket Balls");
+			centerEffectText = "Rocket Balls";
+			balls.forEach(element => {
+				if(element.xSpeed > 0)
+				{
+					element.xSpeed = 10;
+				}
+				else
+				{
+					element.xSpeed = -10;
+				}
+			});
+			break;
+		case 7:
+			break;
+		case 8:
+			break;
+		case 9:
 			break;
 		default:
 			console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
