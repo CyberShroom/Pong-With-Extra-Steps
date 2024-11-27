@@ -228,6 +228,7 @@ class Ball
 		this.soundScore.volume = this.soundScore.volume / 2;
 		this.soundParry = loadSound("Sounds/parry.mp3");
 		this.startRight = true;
+		this.isImmortal = false;
 	}
 
 	//Moves the ball every frame
@@ -320,7 +321,7 @@ class Ball
 		
 		this.bounces = 0;
 
-		if(this.isMainBall === false)
+		if(this.isMainBall === false && this.isImmortal === false)
 		{
 			removeBall(this.index);
 		}
@@ -481,6 +482,7 @@ function setup() {
 	//Create the ball
 	ball = new Ball(canvasArea / 2, canvasArea / 2, 5, 0);
 	ball.isMainBall = true;
+	ball.isImmortal = true;
 	balls[0] = ball;
 	ball.sprite.color = 'red';
 	ball.sprite.stroke = 'red';
@@ -738,6 +740,14 @@ function createGlobalEffect()
 			});
 			break;
 		case 8:
+			console.log("Immortal Balls")
+			centerEffectText = "Immortal Balls";
+			balls.forEach(element => {
+				element.isImmortal = true;
+				element.sprite.color = "purple";
+				element.sprite.stroke = "purple";
+			});
+			balls[0].sprite.color = 'red';
 			break;
 		case 9:
 			break;
@@ -870,7 +880,14 @@ function partyMode()
 	else
 	{
 		balls.forEach(element => {
-			element.sprite.color = "white";
+			if(element.isImmortal)
+			{
+				element.sprite.color = "purple";
+			}
+			else
+			{
+				element.sprite.color = "white";
+			}
 		});
 		balls[0].sprite.color = "red";
 		leftPlayer.resetPaddleColor();
