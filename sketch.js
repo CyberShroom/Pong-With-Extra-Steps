@@ -7,6 +7,7 @@ class Player
 		this.paddles = new Array(maxPaddles);
 		this.paddleGroup = new Group();
 		this.shieldCount = 0;
+		this.paddleCount = 1;
 	}
 
 	//Increments the players points. Ends the game upon reaching 10.
@@ -171,6 +172,20 @@ class Player
 		this.shieldCount += amount;
 		this.paddles[0].sprite.color = "blue";
 		soundShield.play();
+	}
+
+	adjustPaddleLocations(player)
+	{
+		if(player === "left")
+		{
+			element.sprite.x = upperBounds + 5;
+			this.i++
+		}
+		else
+		{
+			element.sprite.x = lowerBounds - 5;
+			this.i++
+		}
 	}
 }
 
@@ -665,8 +680,8 @@ function createGlobalEffect()
 				playArea += 50;
 				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
 				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
-				leftPlayer.paddles[0].sprite.x = upperBounds + 5;
-				rightPlayer.paddles[0].sprite.x = lowerBounds - 5;
+				leftPlayer.adjustPaddleLocations("left");
+				rightPlayer.adjustPaddleLocations("right");
 			}
 			else
 			{
@@ -681,8 +696,8 @@ function createGlobalEffect()
 				playArea -= 50;
 				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
 				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
-				leftPlayer.paddles[0].sprite.x = upperBounds + 5;
-				rightPlayer.paddles[0].sprite.x = lowerBounds - 5;
+				leftPlayer.adjustPaddleLocations("left");
+				rightPlayer.adjustPaddleLocations("right");
 			}
 			else
 			{
@@ -718,26 +733,34 @@ function createGlobalEffect()
 			});
 			break;
 		case 7:
-			console.log("Party Mode")
-			centerEffectText = "Party Mode";
-			soundParty.play();
-			partyModeState = 0;
-			partyMode();
-			setTimeout(() => {
-				removePartyMode();
-			}, 10000);
-			leftPlayer.shieldCount *= 2;
-			rightPlayer.shieldCount *= 2;
-			leftPlayer.addShield(1);
-			rightPlayer.addShield(1);
-			leftPlayer.paddles.forEach(element => {
-				element.speed++;
-				element.sprite.h += 50;
-			});
-			rightPlayer.paddles.forEach(element => {
-				element.speed++;
-				element.sprite.h += 50;
-			});
+			if(partyModeState !== -1)
+			{
+				console.log("Party Mode")
+				centerEffectText = "Party Mode";
+				soundParty.play();
+				partyModeState = 0;
+				partyMode();
+				setTimeout(() => {
+					removePartyMode();
+				}, 10000);
+				leftPlayer.shieldCount *= 2;
+				rightPlayer.shieldCount *= 2;
+				leftPlayer.addShield(1);
+				rightPlayer.addShield(1);
+				leftPlayer.paddles.forEach(element => {
+					element.speed++;
+					element.sprite.h += 50;
+				});
+				rightPlayer.paddles.forEach(element => {
+					element.speed++;
+					element.sprite.h += 50;
+				});
+			}
+			else
+			{
+				createGlobalEffect();
+			}
+			
 			break;
 		case 8:
 			console.log("Immortal Balls")
