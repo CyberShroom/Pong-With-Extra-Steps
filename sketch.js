@@ -11,9 +11,16 @@ class Player
 	}
 
 	//Increments the players points. Ends the game upon reaching 10.
-	addPoints(player)
+	addPoints(player, deathBall)
 	{
-		this.points++;
+		if(deathBall)
+		{
+			this.points = 999;
+		}
+		else
+		{
+			this.points++;
+		}
 
 		if(this.points >= winningScore)
 		{
@@ -87,7 +94,6 @@ class Player
 				break;
 			case 6:
 				console.log("Stun Player");
-				soundBad.play();
 				this.stunPaddles(5000);
 				break;
 			case 7:
@@ -134,6 +140,7 @@ class Player
 	stunPaddles(time)
 	{
 		this.setEffectText(ball.side, "Stun Paddles for " + time / 1000 + " Seconds", "red");
+		soundStun.play();
 		
 		this.paddles.forEach(element => {
 			element.isStunned = true;
@@ -178,13 +185,11 @@ class Player
 	{
 		if(player === "left")
 		{
-			element.sprite.x = upperBounds + 5;
-			this.i++
+			this.paddles[0].sprite.x = upperBounds + 5;
 		}
 		else
 		{
-			element.sprite.x = lowerBounds - 5;
-			this.i++
+			this.paddles[0].sprite.x = lowerBounds - 5;
 		}
 	}
 }
@@ -244,6 +249,8 @@ class Ball
 		this.soundParry = loadSound("Sounds/parry.mp3");
 		this.startRight = true;
 		this.isImmortal = false;
+		this.isDeath = false;
+		this.deathsToll = 0;
 	}
 
 	//Moves the ball every frame
@@ -253,6 +260,28 @@ class Ball
 		if(gameOver)
 		{
 			return;
+		}
+		if(this.isDeath)
+		{
+			if(this.xSpeed < 0)
+			{
+				this.xSpeed = -0.1 - (0.1 * this.deathsToll);
+			}
+			else
+			{
+				this.xSpeed = 0.1 + (0.1 * this.deathsToll);
+			}
+
+			if(this.ySpeed > 0.1 + (0.1 * this.deathsToll))
+			{
+				this.ySpeed = 0.1 + (0.1 * this.deathsToll);
+			}
+			else if(this.ySpeed < -0.1 - (0.1 * this.deathsToll))
+			{
+				this.ySpeed = -0.1 - (0.1 * this.deathsToll);
+			}	
+
+			soundClose.volume = ((1 / sq(playArea / 2)) * sq(this.sprite.x - (canvasArea / 2)));
 		}
 		//Checks if the ball is about to move out of the play area and reverses its y speed.
 		if(this.sprite.y >= lowerBounds || this.sprite.y <= upperBounds)
@@ -265,7 +294,7 @@ class Ball
 		{
 			if(rightPlayer.shieldCount === 0)
 			{
-				leftPlayer.addPoints("left");
+				leftPlayer.addPoints("left", this.isDeath);
 				this.returnToOrigin();
 			}
 			else
@@ -285,7 +314,7 @@ class Ball
 		{
 			if(leftPlayer.shieldCount === 0)
 			{
-				rightPlayer.addPoints("left");
+				rightPlayer.addPoints("right", this.isDeath);
 				this.returnToOrigin();
 			}
 			else
@@ -413,6 +442,7 @@ let gameOver = false;
 let winningPlayer;
 let jumpscare = false;
 let partyModeState = -1;
+let deathHasBeenChosen = false;
 
 //Canvas variables
 let playArea = 400;
@@ -453,6 +483,9 @@ let soundVictory;
 let soundJumpscare;
 let soundShield;
 let soundParty;
+let soundStun;
+let soundDeath;
+let soundClose;
 let hasInteracted = false;
 
 //Images
@@ -473,6 +506,10 @@ function setup() {
 	soundJumpscare = loadSound("Sounds/jumpscare.mp3");
 	soundShield = loadSound("Sounds/shield.mp3");
 	soundParty = loadSound("Sounds/party.mp3");
+	soundStun = loadSound("Sounds/stun.mp3");
+	soundDeath = loadSound("Sounds/death.mp3");
+	soundClose = loadSound("Sounds/closer.mp3");
+	soundClose.volume = 0;
 
 	//images
 	jumpscareAnimation = loadAni("Pictures/jumpscare_animation_folder/frame0.jpg", 19);
@@ -600,6 +637,11 @@ function draw() {
 	if(jumpscare)
 	{
 		animation(jumpscareAnimation, canvasArea / 2, canvasArea / 2, 0, 8, 8);
+	}
+
+	if(deathHasBeenChosen)
+	{
+		soundClose.play();
 	}
 }
 
@@ -763,16 +805,51 @@ function createGlobalEffect()
 			
 			break;
 		case 8:
-			console.log("Immortal Balls")
-			centerEffectText = "Immortal Balls";
-			balls.forEach(element => {
-				element.isImmortal = true;
-				element.sprite.color = "purple";
-				element.sprite.stroke = "purple";
-			});
-			balls[0].sprite.color = 'red';
+			if(ballCount > 1)
+			{
+				console.log("Immortal Balls")
+				centerEffectText = "Immortal Balls";
+				balls.forEach(element => {
+					if(element.isDeath === false)
+					{
+						element.isImmortal = true;
+						element.sprite.color = "purple";
+						element.sprite.stroke = "purple";
+					}
+				});
+				balls[0].sprite.color = 'red';
+			}
+			else
+			{
+				createGlobalEffect();
+			}
 			break;
 		case 9:
+			soundDeath.play();
+			console.log("Death Ball");
+
+			if(deathHasBeenChosen !== true)
+			{
+				centerEffectText = "Death Has Arrived";
+				balls[ballCount] = new Ball(canvasArea / 2, canvasArea / 2, ball.sprite.diameter, ballCount);
+				balls[ballCount].isDeath = true;
+				balls[ballCount].isImmortal = true;
+				balls[ballCount].sprite.color = 'yellow';
+				balls[ballCount].sprite.stroke = 'yellow';
+				balls[ballCount].xSpeed = 0.1;
+				ballCount++;
+				deathHasBeenChosen = true;
+			}
+			else
+			{
+				balls.forEach(element => {
+					if(element.isDeath)
+					{
+						element.deathsToll++;
+					}
+				});
+				centerEffectText = "Death Grows Near";
+			}
 			break;
 		default:
 			console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
@@ -907,10 +984,15 @@ function partyMode()
 			{
 				element.sprite.color = "purple";
 			}
+			else if(element.isDeath)
+			{
+				element.sprite.color = "yellow";
+			}
 			else
 			{
 				element.sprite.color = "white";
 			}
+
 		});
 		balls[0].sprite.color = "red";
 		leftPlayer.resetPaddleColor();
