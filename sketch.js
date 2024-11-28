@@ -710,6 +710,8 @@ function createGlobalEffect()
 			console.log("JUMPSCARE!");
 			jumpscare = true;
 			soundJumpscare.play();
+			leftPlayer.stunPaddles(1500);
+			rightPlayer.stunPaddles(1500);
 			setTimeout(() => {
 				jumpscareTimer();
 			}, 1500);
@@ -775,7 +777,7 @@ function createGlobalEffect()
 			});
 			break;
 		case 7:
-			if(partyModeState !== -1)
+			if(partyModeState === -1)
 			{
 				console.log("Party Mode")
 				centerEffectText = "Party Mode";
