@@ -1,3 +1,15 @@
+/*
+	This program was made with P5-Play. P5-Play provides tools that make development easier. The tool provides a class called groups, which are dynamic arrays that store sprites.
+	Groups can be used in conjunction with colliders to allow objects to run functions when they touch. However, groups only store sprites and cannot store anything else.
+	This was problematic since I'm using custom objects, but a parallel array can be used to circumvent this issue since groups are just arrays. The tool also makes it easier to handle
+	sprites. Instead of having to define shapes or carefully define fills and strokes, sprites come with their own functions and variable that do the same thing but easier.
+	Sprites contain a color and stroke variable that act as fill and stroke respectively. These variable don't impact other sprites or objects. I used constants to define variables that shouldn't be changed,
+	max size, and configuration options. I used conditionals to check the status of variables. Iteration is heavily used in conjunction with the array of balls to either find balls with specific
+	properties or to apply something to all of them. Functions are used throughout to condense and reuse code. The paddles, players, and balls are all their own classes with extensive construtors, properties, and methods.
+*/
+
+
+
 //Player class
 class Player
 {
