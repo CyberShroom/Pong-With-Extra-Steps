@@ -1,7 +1,7 @@
 //Player class
 class Player
 {
-	constructor(playerPaddle)
+	constructor(playerPaddle, side)
 	{
 		this.points = 0; //The points the player has
 		this.paddle = playerPaddle;
@@ -10,10 +10,11 @@ class Player
 		this.middlePaddle;
 		this.shieldCount = 0; //The amount of shielding the player has
 		this.paddleCount = 1; 
+		this.side = side;
 	}
 
 	//Increments the players points. Ends the game upon reaching 10.
-	addPoints(player, deathBall)
+	addPoints(deathBall)
 	{
 		//Checks if the deathball scored
 		if(deathBall)
@@ -28,7 +29,7 @@ class Player
 		//Checks if the player has enough points to win
 		if(this.points >= winningScore)
 		{
-			winningPlayer = player;
+			winningPlayer = this.side;
 			gameOver = true;
 
 			//Play victory sound depending on how the player won
@@ -48,12 +49,12 @@ class Player
 	{
 		switch(Math.floor(random(0,effectCount))){
 			case 0: //Increases the speed of the players paddle
-				this.setEffectText(ball.side, "Faster Paddles", "green");
+				this.setEffectText("Faster Paddles", "green");
 				soundGood.play();
 				this.paddle.speed++;
 				break;
 			case 1: //Decreases the speed of the players paddle
-				this.setEffectText(ball.side, "Slower Paddles", "red");
+				this.setEffectText("Slower Paddles", "red");
 				soundBad.play();
 				if(this.paddle.speed > 1)
 				{
@@ -61,12 +62,12 @@ class Player
 				}
 				break;
 			case 2: //Increase the height of the players paddle
-				this.setEffectText(ball.side, "Longer Paddles", "green");
+				this.setEffectText("Longer Paddles", "green");
 				soundGood.play();
 				this.paddle.sprite.h += 10;
 				break;
 			case 3: //Decreases the height of the players paddle
-				this.setEffectText(ball.side, "Shorter Paddles", "red");
+				this.setEffectText("Shorter Paddles", "red");
 				soundBad.play();
 				if(this.paddle.sprite.h > 10)
 				{
@@ -74,7 +75,7 @@ class Player
 				}
 				break;
 			case 4: //Create a ball with the opposite y trajectory of the main ball
-				this.setEffectText(ball.side, "Richochet", "green");
+				this.setEffectText("Richochet", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				balls[ballCount].ySpeed = balls[0].ySpeed * -1;
@@ -83,7 +84,7 @@ class Player
 			case 5: //Grant the player a shield, but only if they currently don't have one
 				if(this.shieldCount === 0)
 				{
-					this.setEffectText(ball.side, "Shield", "green");
+					this.setEffectText("Shield", "green");
 					this.addShield(5);
 				}
 				else
@@ -95,11 +96,11 @@ class Player
 				this.stunPaddles(5000);
 				break;
 			case 7: //Fire 2 additional balls at opposite diagonals
-				this.setEffectText(ball.side, "Shotgun", "green");
+				this.setEffectText("Shotgun", "green");
 				soundGood.play();
 
-				//Check what side of the field the ball is on and change speed accordingly
-				if(ball.side === "left")
+				//Check what side of the field the player is on and change speed accordingly
+				if(this.side === "left")
 				{
 					balls[ballCount] = new Ball(ball.sprite.x + 1, ball.sprite.y, ball.sprite.diameter, ballCount);
 					balls[ballCount].ySpeed = 1;
@@ -113,8 +114,8 @@ class Player
 				}
 				ballCount++;
 
-				//Check what side of the field the ball is on and change speed accordingly
-				if(ball.side === "left")
+				//Check what side of the field the player is on and change speed accordingly
+				if(this.side === "left")
 				{
 					balls[ballCount] = new Ball(ball.sprite.x + 1, ball.sprite.y, ball.sprite.diameter, ballCount);
 					balls[ballCount].ySpeed = -1;
@@ -129,7 +130,7 @@ class Player
 				ballCount++;
 				break;
 			case 8: //Same as richochet but the ball is indisguingishable from the main ball
-				this.setEffectText(ball.side, "False Positive", "green");
+				this.setEffectText("False Positive", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				balls[ballCount].ySpeed = ball.ySpeed * -1;
@@ -140,16 +141,16 @@ class Player
 				ballCount++;
 				break;
 			case 9: //Invert the trajectory of all balls that are coming toward you
-				this.setEffectText(ball.side, "Reverse Trajectory", "green");
+				this.setEffectText("Reverse Trajectory", "green");
 				soundGood.play();
 
 				//For each ball, invert its speed if its heading towards the player. ball.side checks for which player got the modifier.
 				balls.forEach(element => {
-					if(element.xSpeed > 0 && ball.side === "right")
+					if(element.xSpeed > 0 && this.side === "right")
 					{
 						element.xSpeed *= -1;
 					}
-					else if(element.xSpeed < 0 && ball.side === "left")
+					else if(element.xSpeed < 0 && this.side === "left")
 					{
 						element.xSpeed *= -1;
 					}
@@ -161,10 +162,10 @@ class Player
 	}
 
 	//Sets the text of the effect text to the effect
-	setEffectText(side, effect, color)
+	setEffectText(effect, color)
 	{
 		effectTimer = baseEffectTimer; //How long before the text gets reset
-		if(side === "left")
+		if(this.side === "left")
 		{
 			//Left players text
 			leftEffectText = effect;
@@ -181,7 +182,7 @@ class Player
 	//Prevents moving paddles while active
 	stunPaddles(time)
 	{
-		this.setEffectText(ball.side, "Stun Paddles for " + time / 1000 + " Seconds", "red");
+		this.setEffectText("Stun Paddles for " + time / 1000 + " Seconds", "red");
 		soundStun.play();
 		
 		this.paddle.isStunned = true;
@@ -244,9 +245,9 @@ class Player
 	}
 
 	//Moves the paddle to the edge of the player area whenever its size changes
-	adjustPaddleLocations(player)
+	adjustPaddleLocations()
 	{
-		if(player === "left")
+		if(this.side === "left")
 		{
 			this.paddle.sprite.x = upperBounds + 5;
 		}
@@ -384,7 +385,7 @@ class Ball
 			//Checks if the player has a shield
 			if(rightPlayer.shieldCount === 0)
 			{
-				leftPlayer.addPoints("left", this.isDeath);
+				leftPlayer.addPoints(this.isDeath);
 				this.returnToOrigin();
 			}
 			else
@@ -401,7 +402,7 @@ class Ball
 			//Checks if the player has a shield
 			if(leftPlayer.shieldCount === 0)
 			{
-				rightPlayer.addPoints("right", this.isDeath);
+				rightPlayer.addPoints(this.isDeath);
 				this.returnToOrigin();
 			}
 			else
@@ -618,8 +619,8 @@ function setup() {
 	jumpscareAnimation = loadAni("Pictures/jumpscare_animation_folder/frame0.jpg", 19);
 
 	//Players
-	leftPlayer = new Player(new Paddle(upperBounds + 5, canvasArea / 2, 10, 50));
-	rightPlayer = new Player(new Paddle(lowerBounds - 5, canvasArea / 2, 10, 50));
+	leftPlayer = new Player(new Paddle(upperBounds + 5, canvasArea / 2, 10, 50), "left");
+	rightPlayer = new Player(new Paddle(lowerBounds - 5, canvasArea / 2, 10, 50), "right");
 
 	//Create Sprite Groups
 	ballGroup = new Group();
@@ -819,8 +820,8 @@ function createGlobalEffect()
 				playArea += 50;
 				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
 				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
-				leftPlayer.adjustPaddleLocations("left");
-				rightPlayer.adjustPaddleLocations("right");
+				leftPlayer.adjustPaddleLocations();
+				rightPlayer.adjustPaddleLocations();
 			}
 			else
 			{
@@ -834,8 +835,8 @@ function createGlobalEffect()
 				playArea -= 50;
 				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
 				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
-				leftPlayer.adjustPaddleLocations("left");
-				rightPlayer.adjustPaddleLocations("right");
+				leftPlayer.adjustPaddleLocations();
+				rightPlayer.adjustPaddleLocations();
 
 				//Make sure balls don't end up oob
 				balls.forEach(element => {
