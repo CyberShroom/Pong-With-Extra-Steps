@@ -26,7 +26,14 @@ class Player
 		{
 			winningPlayer = player;
 			gameOver = true;
-			soundVictory.play();
+			if(this.points === 999)
+			{
+				soundLaugh.play()
+			}
+			else
+			{
+				soundVictory.play();
+			}
 		}
 	}
 
@@ -35,7 +42,6 @@ class Player
 	{
 		switch(Math.floor(random(0,effectCount))){
 			case 0:
-				console.log("Faster Paddles");
 				this.setEffectText(ball.side, "Faster Paddles", "green");
 				soundGood.play();
 				this.paddles.forEach(element => {
@@ -43,7 +49,6 @@ class Player
 				});
 				break;
 			case 1:
-				console.log("Slower Paddles");
 				this.setEffectText(ball.side, "Slower Paddles", "red");
 				soundBad.play();
 				this.paddles.forEach(element => {
@@ -54,7 +59,6 @@ class Player
 				});
 				break;
 			case 2:
-				console.log("Longer Paddles");
 				this.setEffectText(ball.side, "Longer Paddles", "green");
 				soundGood.play();
 				this.paddles.forEach(element => {
@@ -62,7 +66,6 @@ class Player
 				});
 				break;
 			case 3:
-				console.log("Shorter Paddles");
 				this.setEffectText(ball.side, "Shorter Paddles", "red");
 				soundBad.play();
 				this.paddles.forEach(element => {
@@ -73,18 +76,16 @@ class Player
 				});
 				break;
 			case 4:
-				console.log("Duplicate Ball");
-				this.setEffectText(ball.side, "Duplicate Ball", "green");
+				this.setEffectText(ball.side, "Richochet", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
+				balls[ballCount].ySpeed = balls[0].ySpeed * -1;
 				ballCount++;
 				break;
 			case 5:
 				if(this.shieldCount === 0)
 				{
-					console.log("Shield");
 					this.setEffectText(ball.side, "Shield", "green");
-					soundGood.play();
 					this.addShield(5);
 				}
 				else
@@ -93,15 +94,46 @@ class Player
 				}
 				break;
 			case 6:
-				console.log("Stun Player");
 				this.stunPaddles(5000);
 				break;
 			case 7:
+				this.setEffectText(ball.side, "Shotgun", "green");
+				soundGood.play();
+				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
+				balls[ballCount].ySpeed = 1;
+				if(ball.side === "left")
+				{
+					balls[ballCount].xSpeed = 0.75;
+				}
+				else
+				{
+					balls[ballCount].xSpeed = -0.75;
+				}
+				ballCount++;
+				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
+				balls[ballCount].ySpeed = -1;
+				if(ball.side === "left")
+				{
+					balls[ballCount].xSpeed = 0.75;
+				}
+				else
+				{
+					balls[ballCount].xSpeed = -0.75;
+				}
+				ballCount++;
 				break;
 			case 8:
+				this.setEffectText(ball.side, "False Positive", "green");
+				soundGood.play();
+				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
+				balls[ballCount].ySpeed = ball.ySpeed * -1;
+				balls[ballCount].xSpeed = ball.xSpeed;
+				balls[ballCount].sprite.color = "red";
+				balls[ballCount].sprite.stroke = "red";
+				balls[ballCount].isFake = true;
+				ballCount++;
 				break;
 			case 9:
-				console.log("Reverse Trajectory");
 				this.setEffectText(ball.side, "Reverse Trajectory", "green");
 				soundGood.play();
 				balls.forEach(element => {
@@ -251,6 +283,7 @@ class Ball
 		this.isImmortal = false;
 		this.isDeath = false;
 		this.deathsToll = 0;
+		this.isFake = false;
 	}
 
 	//Moves the ball every frame
@@ -343,6 +376,14 @@ class Ball
 		{
 			this.side = "left";
 		}
+
+		balls.forEach(element => {
+			if(element.xSpeed === 0)
+			{
+				element.xSpeed = 1;
+				console.log("A ball was caught with no speed. Fixing the problem.")
+			}
+		});
 	}
 
 	//Sets the balls location to the origin and changes its y speed
@@ -403,6 +444,13 @@ class Ball
 				{
 					rightPlayer.createEffect();
 				}
+		}
+
+		if(this.isFake)
+		{
+			this.sprite.color = 'white';
+			this.sprite.stroke = 'white';
+			this.isFake = false;
 		}
 		
 		//Increases ball speed when the threshhold has been met
@@ -486,6 +534,8 @@ let soundParty;
 let soundStun;
 let soundDeath;
 let soundClose;
+let soundWii;
+let soundLaugh;
 let hasInteracted = false;
 
 //Images
@@ -509,6 +559,8 @@ function setup() {
 	soundStun = loadSound("Sounds/stun.mp3");
 	soundDeath = loadSound("Sounds/death.mp3");
 	soundClose = loadSound("Sounds/closer.mp3");
+	soundWii = loadSound("Sounds/sports.mp3");
+	soundLaugh = loadSound("Sounds/laugh.mp3");
 	soundClose.volume = 0;
 
 	//images
@@ -620,17 +672,17 @@ function draw() {
 		});
 	}
 
-	//Make every ball in play move
-	balls.forEach(element => {
-		element.moveBall();
-	});
-
-	//Check for ball collisions
-	ballGroup.overlaps(leftPlayer.paddleGroup,onPaddleCollision);
-	ballGroup.overlaps(rightPlayer.paddleGroup,onPaddleCollision);
-
-	if(soundBackground.isPlaying() === false && hasInteracted === true)
+	if(hasInteracted === true)
 	{
+		//Make every ball in play move
+		balls.forEach(element => {
+			element.moveBall();
+		});
+
+		//Check for ball collisions
+		ballGroup.overlaps(leftPlayer.paddleGroup,onPaddleCollision);
+		ballGroup.overlaps(rightPlayer.paddleGroup,onPaddleCollision);
+
 		soundBackground.play();
 	}
 
@@ -665,7 +717,6 @@ function createGlobalEffect()
 {
 	switch(Math.floor(random(0,globalEffectCount))){
 		case 0:
-			console.log("Ballsplosion");
 			centerEffectText = "Ballsplosion";
 			balls[ballCount] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount);
 			balls[ballCount].ySpeed = 1.0;
@@ -688,8 +739,8 @@ function createGlobalEffect()
 		case 1:
 			if(typeof leftPlayer.paddles[3] === 'undefined')
 			{
-				console.log("Wii Sports");
 				centerEffectText = "Wii Sports";
+				soundWii.play();
 
 				leftPlayer.paddles[3] = new Paddle(canvasArea / 2 - 25, canvasArea / 2, 10, 50);
 				leftPlayer.paddleGroup.add(leftPlayer.paddles[3].sprite);
@@ -707,7 +758,6 @@ function createGlobalEffect()
 			}
 			break;
 		case 2:
-			console.log("JUMPSCARE!");
 			jumpscare = true;
 			soundJumpscare.play();
 			leftPlayer.stunPaddles(1500);
@@ -719,7 +769,6 @@ function createGlobalEffect()
 		case 3:
 			if(playArea < maxArea)
 			{
-				console.log("Bigger Area");
 				centerEffectText = "Bigger Area";
 				playArea += 50;
 				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
@@ -735,13 +784,31 @@ function createGlobalEffect()
 		case 4:
 			if(playArea > 200)
 			{
-				console.log("Lower Area");
-				centerEffectText = "Lower Area";
+				centerEffectText = "Smaller Area";
 				playArea -= 50;
 				upperBounds = (canvasArea / 2) - (playArea / 2) + 5; 
 				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
 				leftPlayer.adjustPaddleLocations("left");
 				rightPlayer.adjustPaddleLocations("right");
+				balls.forEach(element => {
+					if(element.side === "left")
+					{
+						element.sprite.x += 50;
+					}
+					else
+					{
+						element.sprite.x -= 50;
+					}
+
+					if(element.sprite.y > lowerBounds)
+					{
+						element.sprite.y -= 50;
+					}
+					else if(element.sprite.y < upperBounds)
+					{
+						element.sprite.y += 50;
+					}
+				});
 			}
 			else
 			{
@@ -749,7 +816,6 @@ function createGlobalEffect()
 			}
 			break;
 		case 5:
-			console.log("Faster Balls");
 			centerEffectText = "Faster Balls";
 			balls.forEach(element => {
 				if(element.xSpeed > 0)
@@ -763,7 +829,6 @@ function createGlobalEffect()
 			});
 			break;
 		case 6:
-			console.log("Rocket Balls");
 			centerEffectText = "Rocket Balls";
 			balls.forEach(element => {
 				if(element.xSpeed > 0)
@@ -779,7 +844,6 @@ function createGlobalEffect()
 		case 7:
 			if(partyModeState === -1)
 			{
-				console.log("Party Mode")
 				centerEffectText = "Party Mode";
 				soundParty.play();
 				partyModeState = 0;
@@ -809,7 +873,6 @@ function createGlobalEffect()
 		case 8:
 			if(ballCount > 1)
 			{
-				console.log("Immortal Balls")
 				centerEffectText = "Immortal Balls";
 				balls.forEach(element => {
 					if(element.isDeath === false)
@@ -828,7 +891,6 @@ function createGlobalEffect()
 			break;
 		case 9:
 			soundDeath.play();
-			console.log("Death Ball");
 
 			if(deathHasBeenChosen !== true)
 			{
@@ -892,12 +954,15 @@ function partyMode()
 	{
 		balls.forEach(element => {
 			element.sprite.color = "orange";
+			element.sprite.stroke = "orange";
 		});
 		leftPlayer.paddles.forEach(element => {
 			element.sprite.color = "blue";
+			element.sprite.stroke = "blue";
 		});
 		rightPlayer.paddles.forEach(element => {
 			element.sprite.color = "blue";
+			element.sprite.stroke = "blue";
 		});
 
 		partyModeState = 1;
@@ -906,12 +971,15 @@ function partyMode()
 	{
 		balls.forEach(element => {
 			element.sprite.color = "yellow";
+			element.sprite.stroke = "yellow";
 		});
 		leftPlayer.paddles.forEach(element => {
 			element.sprite.color = "green";
+			element.sprite.stroke = "green";
 		});
 		rightPlayer.paddles.forEach(element => {
 			element.sprite.color = "green";
+			element.sprite.stroke = "green";
 		});
 
 		partyModeState = 2;
@@ -920,12 +988,15 @@ function partyMode()
 	{
 		balls.forEach(element => {
 			element.sprite.color = "green";
+			element.sprite.stroke = "green";
 		});
 		leftPlayer.paddles.forEach(element => {
 			element.sprite.color = "yellow";
+			element.sprite.stroke = "yellow";
 		});
 		rightPlayer.paddles.forEach(element => {
 			element.sprite.color = "yellow";
+			element.sprite.stroke = "yellow";
 		});
 
 		partyModeState = 3;
@@ -934,12 +1005,15 @@ function partyMode()
 	{
 		balls.forEach(element => {
 			element.sprite.color = "blue";
+			element.sprite.stroke = "blue";
 		});
 		leftPlayer.paddles.forEach(element => {
 			element.sprite.color = "orange";
+			element.sprite.stroke = "orange";
 		});
 		rightPlayer.paddles.forEach(element => {
 			element.sprite.color = "orange";
+			element.sprite.stroke = "orange";
 		});
 
 		partyModeState = 4;
@@ -948,12 +1022,15 @@ function partyMode()
 	{
 		balls.forEach(element => {
 			element.sprite.color = "purple";
+			element.sprite.stroke = "purple";
 		});
 		leftPlayer.paddles.forEach(element => {
 			element.sprite.color = "red";
+			element.sprite.stroke = "red";
 		});
 		rightPlayer.paddles.forEach(element => {
 			element.sprite.color = "red";
+			element.sprite.stroke = "red";
 		});
 
 		partyModeState = 5;
@@ -962,12 +1039,15 @@ function partyMode()
 	{
 		balls.forEach(element => {
 			element.sprite.color = "red";
+			element.sprite.stroke = "red";
 		});
 		leftPlayer.paddles.forEach(element => {
 			element.sprite.color = "purple";
+			element.sprite.stroke = "purple";
 		});
 		rightPlayer.paddles.forEach(element => {
 			element.sprite.color = "purple";
+			element.sprite.stroke = "purple";
 		});
 
 		partyModeState = 0;
@@ -982,21 +1062,25 @@ function partyMode()
 	else
 	{
 		balls.forEach(element => {
-			if(element.isImmortal)
-			{
-				element.sprite.color = "purple";
-			}
-			else if(element.isDeath)
+			if(element.isDeath)
 			{
 				element.sprite.color = "yellow";
+				element.sprite.stroke = "yellow";
+			}
+			else if(element.isImmortal)
+			{
+				element.sprite.color = "purple";
+				element.sprite.stroke = "purple";
 			}
 			else
 			{
 				element.sprite.color = "white";
+				element.sprite.stroke = "white";
 			}
 
 		});
-		balls[0].sprite.color = "red";
+		ball.sprite.color = "red";
+		ball.sprite.stroke = "red";
 		leftPlayer.resetPaddleColor();
 		rightPlayer.resetPaddleColor();
 	}
