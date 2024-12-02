@@ -77,9 +77,8 @@ class Player
 			case 4: //Create a ball with the opposite y trajectory of the main ball
 				this.setEffectText("Richochet", "green");
 				soundGood.play();
-				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
-				balls[ballCount].ySpeed = balls[0].ySpeed * -1;
-				ballCount++;
+				this.ballRef = createBall(ball.sprite.x, ball.sprite.y, ball.sprite.diameter);
+				this.ballRef.ySpeed = ball.ySpeed * -1;
 				break;
 			case 5: //Grant the player a shield, but only if they currently don't have one
 				if(this.shieldCount === 0)
@@ -99,52 +98,53 @@ class Player
 				this.setEffectText("Shotgun", "green");
 				soundGood.play();
 
-				//Check what side of the field the player is on and change speed accordingly
-				if(this.side === "left")
-				{
-					balls[ballCount] = new Ball(ball.sprite.x + 1, ball.sprite.y, ball.sprite.diameter, ballCount);
-					balls[ballCount].ySpeed = 1;
-					balls[ballCount].xSpeed = 0.75;
-				}
-				else
-				{
-					balls[ballCount] = new Ball(ball.sprite.x - 1, ball.sprite.y, ball.sprite.diameter, ballCount);
-					balls[ballCount].ySpeed = 1;
-					balls[ballCount].xSpeed = -0.75;
-				}
-				ballCount++;
+				//First ball
+				this.ballRef = createBall(ball.sprite.x, ball.sprite.y, ball.sprite.diameter);
+				this.ballRef.ySpeed = 1;
 
 				//Check what side of the field the player is on and change speed accordingly
 				if(this.side === "left")
 				{
-					balls[ballCount] = new Ball(ball.sprite.x + 1, ball.sprite.y, ball.sprite.diameter, ballCount);
-					balls[ballCount].ySpeed = -1;
-					balls[ballCount].xSpeed = 0.75;
+					this.ballRef.sprite.x += 1;
+					this.ballRef.xSpeed = 0.75;
 				}
 				else
 				{
-					balls[ballCount] = new Ball(ball.sprite.x - 1, ball.sprite.y, ball.sprite.diameter, ballCount);
-					balls[ballCount].ySpeed = -1;
-					balls[ballCount].xSpeed = -0.75;
+					this.ballRef.sprite.x -= 1;
+					this.ballRef.xSpeed = -0.75;
 				}
-				ballCount++;
+
+				//2nd ball
+				this.ballRef = createBall(ball.sprite.x, ball.sprite.y, ball.sprite.diameter);
+				this.ballRef.ySpeed = -1;
+
+				//Check what side of the field the player is on and change speed accordingly
+				if(this.side === "left")
+				{
+					this.ballRef.sprite.x += 1;
+					this.ballRef.xSpeed = 0.75;
+				}
+				else
+				{
+					this.ballRef.sprite.x -= 1;
+					this.ballRef.xSpeed = -0.75;
+				}
+
 				break;
 			case 8: //Same as richochet but the ball is indisguingishable from the main ball
 				this.setEffectText("False Positive", "green");
 				soundGood.play();
-				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
-				balls[ballCount].ySpeed = ball.ySpeed * -1;
-				balls[ballCount].xSpeed = ball.xSpeed;
-				balls[ballCount].sprite.color = "red";
-				balls[ballCount].sprite.stroke = "red";
-				balls[ballCount].isFake = true;
-				ballCount++;
+				this.ballRef = createBall(ball.sprite.x, ball.sprite.y, ball.sprite.diameter);
+				this.ballRef.ySpeed = ball.ySpeed * -1;
+				this.ballRef.xSpeed = ball.xSpeed;
+				this.ballRef.setBallColor("red");
+				this.ballRef.isFake = true;
 				break;
 			case 9: //Invert the trajectory of all balls that are coming toward you
 				this.setEffectText("Reverse Trajectory", "green");
 				soundGood.play();
 
-				//For each ball, invert its speed if its heading towards the player. ball.side checks for which player got the modifier.
+				//For each ball, invert its speed if its heading towards the player.
 				balls.forEach(element => {
 					if(element.xSpeed > 0 && this.side === "right")
 					{
@@ -186,7 +186,7 @@ class Player
 		soundStun.play();
 		
 		this.paddle.isStunned = true;
-		this.changePaddleColor('yellow');
+		this.setPaddleColor('yellow');
 
 		setTimeout(() => {
 			this.removeStun();
@@ -208,31 +208,18 @@ class Player
 	//Sets paddle color back to whatever color it should be
 	resetPaddleColor()
 	{
-		this.paddle.sprite.color = 'white';
-		this.paddle.sprite.stroke = 'white';
-		if(typeof this.middlePaddle !== 'undefined')
-		{
-			this.middlePaddle.sprite.color = 'white';
-			this.middlePaddle.sprite.stroke = 'white';
-		}
-
-		//If the player has a shield, the paddle should be blue
-		if(this.shieldCount !== 0)
-		{
-			this.paddle.sprite.color = 'blue';
-			this.paddle.sprite.stroke = 'blue';
-		}
-
 		//If the paddle is stunned, it should be yellow
-		if(this.paddle.isStunned)
+		if(this.paddle.isStunned) //If player is stunned, the paddle should be yellow
 		{
-			this.paddle.sprite.color = 'yellow';
-			this.paddle.sprite.stroke = 'yellow';
-			if(typeof this.middlePaddle !== 'undefined')
-			{
-				this.middlePaddle.sprite.color = 'yellow';
-				this.middlePaddle.sprite.stroke = 'yellow';
-			}
+			this.setPaddleColor("yellow");
+		}
+		else if(this.shieldCount !== 0) //If the player has a shield, the paddle should be blue
+		{
+			this.setPaddleColor("blue");
+		}
+		else
+		{
+			this.setPaddleColor("white");
 		}
 	}
 
@@ -240,7 +227,7 @@ class Player
 	addShield(amount)
 	{
 		this.shieldCount += amount;
-		this.paddle.sprite.color = "blue";
+		this.setPaddleColor("blue");
 		soundShield.play();
 	}
 
@@ -267,7 +254,7 @@ class Player
 	}
 
 	//Changes all paddle color to the given color
-	changePaddleColor(color)
+	setPaddleColor(color)
 	{
 		this.paddle.sprite.color = color;
 		this.paddle.sprite.stroke = color;
@@ -504,8 +491,7 @@ class Ball
 		//Reveals to the player if this ball is fake
 		if(this.isFake)
 		{
-			this.sprite.color = 'white';
-			this.sprite.stroke = 'white';
+			this.setBallColor('white');
 			this.isFake = false;
 		}
 		
@@ -528,6 +514,34 @@ class Ball
 			{
 				createGlobalEffect();
 			}
+		}
+	}
+
+	//Sets the color and stroke of the ball
+	setBallColor(color)
+	{
+		this.sprite.color = color;
+		this.sprite.stroke = color;
+	}
+
+	//Resets the ball color to default
+	resetBallColor()
+	{
+		if(this.isMainBall)
+		{
+			this.setBallColor("red");
+		}
+		else if(this.isDeath)
+		{
+			this.setBallColor("yellow");
+		}
+		else if(this.isImmortal)
+		{
+			this.setBallColor("purple");
+		}
+		else
+		{
+			this.setBallColor("white");
 		}
 	}
 }
@@ -557,7 +571,7 @@ let lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; //The lower and right b
 
 //The ball
 let ball;
-let ballCount = 1;
+let ballCount = 0;
 
 //Balls array
 let balls = new Array(maxBalls);
@@ -599,7 +613,6 @@ function setup() {
 	rectMode('center');
 	textAlign("center");
 
-	
 	//Sounds
 	soundGood = loadSound("Sounds/good.mp3");
 	soundBad = loadSound("Sounds/bad.mp3");
@@ -626,12 +639,10 @@ function setup() {
 	ballGroup = new Group();
 
 	//Create the ball
-	ball = new Ball(canvasArea / 2, canvasArea / 2, 5, 0);
+	ball = createBall(canvasArea / 2, canvasArea / 2, 5);
 	ball.isMainBall = true;
 	ball.isImmortal = true;
-	balls[0] = ball;
-	ball.sprite.color = 'red';
-	ball.sprite.stroke = 'red';
+	ball.setBallColor("red");
 
 	soundBackground.volume = soundBackground.volume / 2;
 }
@@ -764,26 +775,31 @@ function createGlobalEffect()
 	switch(Math.floor(random(0,globalEffectCount))){
 		case 0: //Create 6 balls with trajectories that look like explosions
 			centerEffectText = "Ballsplosion";
-			balls[ballCount] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount);
-			balls[ballCount].ySpeed = 1.0;
-			balls[ballCount + 1] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 1);
-			balls[ballCount + 1].ySpeed = 0.0;
-			balls[ballCount + 1].xSpeed *= 2;
-			balls[ballCount + 2] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 2);
-			balls[ballCount + 2].ySpeed = -1.0;
-			balls[ballCount + 3] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 3);
-			balls[ballCount + 3].xSpeed = -1.0;
-			balls[ballCount + 3].ySpeed = -1.0;
-			balls[ballCount + 4] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 4);
-			balls[ballCount + 4].xSpeed = -2.0;
-			balls[ballCount + 4].ySpeed = 0.0;
-			balls[ballCount + 5] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount + 5);
-			balls[ballCount + 5].xSpeed = -1.0;
-			balls[ballCount + 5].ySpeed = 1.0;
-			ballCount += 6;
+
+			let ballRef = createBall(canvasArea / 2, canvasArea / 2, 5);
+			ballRef.ySpeed = 1.0;
+
+			ballRef = createBall(canvasArea / 2, canvasArea / 2, 5);
+			ballRef.xSpeed = 2.0;
+			ballRef.ySpeed = 0.0;
+
+			ballRef = createBall(canvasArea / 2, canvasArea / 2, 5);
+			ballRef.ySpeed = -1.0;
+
+			ballRef = createBall(canvasArea / 2, canvasArea / 2, 5);
+			ballRef.xSpeed = -1.0;
+			ballRef.ySpeed = -1.0;
+
+			ballRef = createBall(canvasArea / 2, canvasArea / 2, 5);
+			ballRef.xSpeed = -2.0;
+			ballRef.ySpeed = 0.0;
+
+			ballRef = createBall(canvasArea / 2, canvasArea / 2, 5);
+			ballRef.xSpeed = -1.0;
+			ballRef.ySpeed = 1.0;
+
 			break;
-		case 1: //Create 2  paddles in the middle of the area that last for 10 seconds
-			console.log("WII");
+		case 1: //Create 2 paddles in the middle of the area that last for 10 seconds
 			if(typeof leftPlayer.middlePaddle === 'undefined')
 			{
 				centerEffectText = "Wii Sports";
@@ -931,8 +947,7 @@ function createGlobalEffect()
 					if(element.isDeath === false && element.isMainBall === false)
 					{
 						element.isImmortal = true;
-						element.sprite.color = "purple";
-						element.sprite.stroke = "purple";
+						element.setBallColor("purple");
 					}
 				});
 			}
@@ -948,13 +963,11 @@ function createGlobalEffect()
 			if(deathHasBeenChosen !== true)
 			{
 				centerEffectText = "Death Has Arrived";
-				balls[ballCount] = new Ball(canvasArea / 2, canvasArea / 2, ball.sprite.diameter, ballCount);
-				balls[ballCount].isDeath = true;
-				balls[ballCount].isImmortal = true;
-				balls[ballCount].sprite.color = 'yellow';
-				balls[ballCount].sprite.stroke = 'yellow';
-				balls[ballCount].xSpeed = 0.1;
-				ballCount++;
+				let ballRef = createBall(canvasArea / 2, canvasArea / 2, ball.sprite.diameter);
+				ballRef.isDeath = true;
+				ballRef.isImmortal = true;
+				ballRef.setBallColor("yellow");
+				ballRef.xSpeed = 0.1;
 				deathHasBeenChosen = true;
 			}
 			else //Increase its speed multiplier
@@ -1012,66 +1025,60 @@ function partyMode()
 	if(partyModeState === 0)
 	{
 		balls.forEach(element => {
-			element.sprite.color = "orange";
-			element.sprite.stroke = "orange";
+			element.setBallColor("orange");
 		});
-		leftPlayer.changePaddleColor('blue');
-		rightPlayer.changePaddleColor('blue');
+		leftPlayer.setPaddleColor('blue');
+		rightPlayer.setPaddleColor('blue');
 
 		partyModeState = 1;
 	}
 	else if(partyModeState === 1)
 	{
 		balls.forEach(element => {
-			element.sprite.color = "yellow";
-			element.sprite.stroke = "yellow";
+			element.setBallColor("yellow");
 		});
-		leftPlayer.changePaddleColor('green');
-		rightPlayer.changePaddleColor('green');
+		leftPlayer.setPaddleColor('green');
+		rightPlayer.setPaddleColor('green');
 
 		partyModeState = 2;
 	}
 	else if(partyModeState === 2)
 	{
 		balls.forEach(element => {
-			element.sprite.color = "green";
-			element.sprite.stroke = "green";
+			element.setBallColor("green");
 		});
-		leftPlayer.changePaddleColor('yellow');
-		rightPlayer.changePaddleColor('yellow');
+		leftPlayer.setPaddleColor('yellow');
+		rightPlayer.setPaddleColor('yellow');
 
 		partyModeState = 3;
 	}
 	else if(partyModeState === 3)
 	{
 		balls.forEach(element => {
-			element.sprite.color = "blue";
-			element.sprite.stroke = "blue";
+			element.setBallColor("blue");
 		});
-		leftPlayer.changePaddleColor('orange');
-		rightPlayer.changePaddleColor('orange');
+		leftPlayer.setPaddleColor('orange');
+		rightPlayer.setPaddleColor('orange');
 
 		partyModeState = 4;
 	}
 	else if(partyModeState === 4)
 	{
 		balls.forEach(element => {
-			element.sprite.color = "purple";
-			element.sprite.stroke = "purple";
+			element.setBallColor("purple");
 		});
-		leftPlayer.changePaddleColor('red');
-		rightPlayer.changePaddleColor('red');
+		leftPlayer.setPaddleColor('red');
+		rightPlayer.setPaddleColor('red');
 
 		partyModeState = 5;
 	}
 	else if(partyModeState === 5)
 	{
 		balls.forEach(element => {
-			element.sprite.color = "red";
-			element.sprite.stroke = "red";
+			element.setBallColor("red");
 		});
-		leftPlayer.changePaddleColor('purple');
-		rightPlayer.changePaddleColor('purple');
+		leftPlayer.setPaddleColor('purple');
+		rightPlayer.setPaddleColor('purple');
 
 		partyModeState = 0;
 	}
@@ -1087,25 +1094,8 @@ function partyMode()
 	{
 		//Reset the color of every ball
 		balls.forEach(element => {
-			if(element.isDeath)
-			{
-				element.sprite.color = "yellow";
-				element.sprite.stroke = "yellow";
-			}
-			else if(element.isImmortal)
-			{
-				element.sprite.color = "purple";
-				element.sprite.stroke = "purple";
-			}
-			else
-			{
-				element.sprite.color = "white";
-				element.sprite.stroke = "white";
-			}
-
+			element.resetBallColor();
 		});
-		ball.sprite.color = "red";
-		ball.sprite.stroke = "red";
 
 		//Reset the color of the paddles
 		leftPlayer.resetPaddleColor();
@@ -1117,4 +1107,12 @@ function partyMode()
 function removePartyMode()
 {
 	partyModeState = -1;
+}
+
+//Creates a new ball and adds it to the list
+function createBall(x, y, d)
+{
+	balls[ballCount] = new Ball(x, y, d, ballCount);
+	ballCount++;
+	return balls[ballCount - 1];
 }
