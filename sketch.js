@@ -3,16 +3,17 @@ class Player
 {
 	constructor()
 	{
-		this.points = 0;
+		this.points = 0; //The points the player has
 		this.paddles = new Array(maxPaddles);
 		this.paddleGroup = new Group();
-		this.shieldCount = 0;
-		this.paddleCount = 1;
+		this.shieldCount = 0; //The amount of shielding the player has
+		this.paddleCount = 1; 
 	}
 
 	//Increments the players points. Ends the game upon reaching 10.
 	addPoints(player, deathBall)
 	{
+		//Checks if the deathball scored
 		if(deathBall)
 		{
 			this.points = 999;
@@ -22,10 +23,13 @@ class Player
 			this.points++;
 		}
 
+		//Checks if the player has enough points to win
 		if(this.points >= winningScore)
 		{
 			winningPlayer = player;
 			gameOver = true;
+
+			//Play victory sound depending on how the player won
 			if(this.points === 999)
 			{
 				soundLaugh.play()
@@ -41,16 +45,20 @@ class Player
 	createEffect()
 	{
 		switch(Math.floor(random(0,effectCount))){
-			case 0:
+			case 0: //Increases the speed of the players paddle
 				this.setEffectText(ball.side, "Faster Paddles", "green");
 				soundGood.play();
+
+				//For each paddle, increase its speed
 				this.paddles.forEach(element => {
 					element.speed++;
 				});
 				break;
-			case 1:
+			case 1: //Decreases the speed of the players paddle
 				this.setEffectText(ball.side, "Slower Paddles", "red");
 				soundBad.play();
+
+				//For each paddle, decrease its speed
 				this.paddles.forEach(element => {
 					if(element.speed > 1)
 					{
@@ -58,16 +66,20 @@ class Player
 					}
 				});
 				break;
-			case 2:
+			case 2: //Increase the height of the players paddle
 				this.setEffectText(ball.side, "Longer Paddles", "green");
 				soundGood.play();
+
+				//For each paddle, increase its height
 				this.paddles.forEach(element => {
 					element.sprite.h += 10;
 				});
 				break;
-			case 3:
+			case 3: //Decreases the height of the players paddle
 				this.setEffectText(ball.side, "Shorter Paddles", "red");
 				soundBad.play();
+
+				//For each paddle, decrease its height
 				this.paddles.forEach(element => {
 					if(element.h > 10)
 					{
@@ -75,14 +87,14 @@ class Player
 					}
 				});
 				break;
-			case 4:
+			case 4: //Create a ball with the opposite y trajectory of the main ball
 				this.setEffectText(ball.side, "Richochet", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				balls[ballCount].ySpeed = balls[0].ySpeed * -1;
 				ballCount++;
 				break;
-			case 5:
+			case 5: //Grant the player a shield, but only if they currently don't have one
 				if(this.shieldCount === 0)
 				{
 					this.setEffectText(ball.side, "Shield", "green");
@@ -93,14 +105,15 @@ class Player
 					this.createEffect();
 				}
 				break;
-			case 6:
+			case 6: //Stun the player for 5 seconds
 				this.stunPaddles(5000);
 				break;
-			case 7:
+			case 7: //Fire 2 additional balls at opposite diagonals
 				this.setEffectText(ball.side, "Shotgun", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				balls[ballCount].ySpeed = 1;
+				//Check what side of the field the ball is on and change speed accordingly
 				if(ball.side === "left")
 				{
 					balls[ballCount].xSpeed = 0.75;
@@ -110,8 +123,10 @@ class Player
 					balls[ballCount].xSpeed = -0.75;
 				}
 				ballCount++;
+
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
 				balls[ballCount].ySpeed = -1;
+				//Check what side of the field the ball is on and change speed accordingly
 				if(ball.side === "left")
 				{
 					balls[ballCount].xSpeed = 0.75;
@@ -122,7 +137,7 @@ class Player
 				}
 				ballCount++;
 				break;
-			case 8:
+			case 8: //Same as richochet but the ball is indisguingishable from the main ball
 				this.setEffectText(ball.side, "False Positive", "green");
 				soundGood.play();
 				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
@@ -133,9 +148,11 @@ class Player
 				balls[ballCount].isFake = true;
 				ballCount++;
 				break;
-			case 9:
+			case 9: //Invert the trajectory of all balls that are coming toward you
 				this.setEffectText(ball.side, "Reverse Trajectory", "green");
 				soundGood.play();
+
+				//For each ball, invert its speed if its heading towards the player. ball.side checks for which player got the modifier.
 				balls.forEach(element => {
 					if(element.xSpeed > 0 && ball.side === "right")
 					{
@@ -147,7 +164,7 @@ class Player
 					}
 				});
 				break;
-			default:
+			default: //This should never run
 				console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
 		}
 	}
@@ -155,14 +172,16 @@ class Player
 	//Sets the text of the effect text to the effect
 	setEffectText(side, effect, color)
 	{
-		effectTimer = baseEffectTimer;
+		effectTimer = baseEffectTimer; //How long before the text gets reset
 		if(side === "left")
 		{
+			//Left players text
 			leftEffectText = effect;
 			leftTextColor = color;
 		}
 		else
 		{
+			//Right players text
 			rightEffectText = effect;
 			rightTextColor = color;
 		}
@@ -194,18 +213,22 @@ class Player
 		this.resetPaddleColor();
 	}
 
+	//Sets paddle color back to whatever color it should be
 	resetPaddleColor()
 	{
+		//All paddles are white by default
 		this.paddles.forEach(element => {
 			element.sprite.color = 'white';
 		});
 
+		//If the player has a shield, the paddle should be blue
 		if(this.shieldCount !== 0)
 		{
 			this.paddles[0].sprite.color = 'blue';
 		}
 	}
 
+	//Adds to the players shield amount
 	addShield(amount)
 	{
 		this.shieldCount += amount;
@@ -213,6 +236,7 @@ class Player
 		soundShield.play();
 	}
 
+	//Moves the paddle to the edge of the player area whenever its size changes
 	adjustPaddleLocations(player)
 	{
 		if(player === "left")
@@ -237,15 +261,16 @@ class Paddle
 		this.sprite.w = w;
 		this.sprite.h = h;
 		this.sprite.color = 'white';
-		this.speed = 1;
-		this.isStunned = false;
+		this.speed = 1; //Speed of the paddle
+		this.isStunned = false; //Whether its allowed to move
 	}
 
 	//Moves the paddle up and down.
 	movePaddle(isUp)
 	{
-		if(this.isStunned) return;
+		if(this.isStunned) return; //Cant move when stunned lol
 
+		//Checks the input direction and whether the paddle is at the edge of the area
 		if(isUp && this.sprite.y > upperBounds + this.sprite.halfHeight)
 		{
 			this.sprite.y -= this.speed;
@@ -267,23 +292,23 @@ class Ball
 		this.sprite.y = y;
 		this.sprite.diameter = diameter;
 		this.sprite.color = 'white';
-		this.xSpeed = 1;
-		this.ySpeed = random(-0.5,0.5);
-		ballGroup.add(this.sprite);
-		this.bounces = 0;
-		this.side = "right";
-		this.isMainBall = false;
-		this.index = index;
+		this.xSpeed = 1; //The speed the ball moves in the x direction
+		this.ySpeed = random(-0.5,0.5); //The speed the ball moves in the y direction. Initializes to a random speed.
+		ballGroup.add(this.sprite); //Adds the balls sprite to the group
+		this.bounces = 0; //The number of times this ball has bounced since the last global effect / score. Only needed by the main ball.
+		this.side = "right"; //The side of the area the ball is on. Used to identify the player.
+		this.isMainBall = false; //Whether this ball is allowed to cause effects.
+		this.index = index; //Index referemce of the ball
 		this.soundHit = loadSound("Sounds/Hit.mp3");
 		this.soundHit.volume = this.soundHit.volume / 2;
 		this.soundScore = loadSound("Sounds/score.mp3");
 		this.soundScore.volume = this.soundScore.volume / 2;
 		this.soundParry = loadSound("Sounds/parry.mp3");
-		this.startRight = true;
-		this.isImmortal = false;
-		this.isDeath = false;
-		this.deathsToll = 0;
-		this.isFake = false;
+		this.startRight = true; //What player should be targeted when this ball spawns in?
+		this.isImmortal = false; //Whether this ball is destroyed upon scoring
+		this.isDeath = false; //Whether this ball instantly ends the game when it scores
+		this.deathsToll = 0; //Multiplier that increases the speed of the ball, but only if isDeath is true.
+		this.isFake = false; //Changes the color of the ball upon being bounced by a paddle
 	}
 
 	//Moves the ball every frame
@@ -294,6 +319,8 @@ class Ball
 		{
 			return;
 		}
+
+		//Sets the balls speed if it is death.
 		if(this.isDeath)
 		{
 			if(this.xSpeed < 0)
@@ -316,6 +343,7 @@ class Ball
 
 			soundClose.volume = ((1 / sq(playArea / 2)) * sq(this.sprite.x - (canvasArea / 2)));
 		}
+
 		//Checks if the ball is about to move out of the play area and reverses its y speed.
 		if(this.sprite.y >= lowerBounds || this.sprite.y <= upperBounds)
 		{
@@ -325,6 +353,7 @@ class Ball
 		//Checks if the ball has scored, grants a point to the player, and resets the balls location.
 		if(this.sprite.x >= lowerBounds)
 		{
+			//Checks if the player has a shield
 			if(rightPlayer.shieldCount === 0)
 			{
 				leftPlayer.addPoints("left", this.isDeath);
@@ -335,16 +364,13 @@ class Ball
 				this.soundParry.play();
 				rightPlayer.shieldCount--;
 				this.xSpeed *= -1;
-
-				if(rightPlayer.shieldCount === 0)
-				{
-					rightPlayer.paddles[0].sprite.color = 'white';
-				}
+				rightPlayer.resetPaddleColor();
 			}
 			
 		}
 		else if(this.sprite.x <= upperBounds)
 		{
+			//Checks if the player has a shield
 			if(leftPlayer.shieldCount === 0)
 			{
 				rightPlayer.addPoints("right", this.isDeath);
@@ -355,11 +381,7 @@ class Ball
 				this.soundParry.play();
 				leftPlayer.shieldCount--;
 				this.xSpeed *= -1;
-
-				if(leftPlayer.shieldCount === 0)
-				{
-					leftPlayer.paddles[0].sprite.color = 'white';
-				}
+				leftPlayer.resetPaddleColor();
 			}
 		}
 
@@ -377,6 +399,7 @@ class Ball
 			this.side = "left";
 		}
 
+		//Checks to make sure the ball isn't softlocked. Forces a speed on the ball if it is.
 		balls.forEach(element => {
 			if(element.xSpeed === 0)
 			{
@@ -393,6 +416,8 @@ class Ball
 		this.sprite.x = canvasArea / 2;
 		this.sprite.y = canvasArea / 2;
 		this.ySpeed = random(-0.5,0.5);
+
+		//Checks what player to fling at
 		if(this.startRight)
 		{
 			this.xSpeed = 1;
@@ -406,6 +431,7 @@ class Ball
 		
 		this.bounces = 0;
 
+		//If the ball isn't the main ball or an immortal ball, destroy it
 		if(this.isMainBall === false && this.isImmortal === false)
 		{
 			removeBall(this.index);
@@ -437,15 +463,16 @@ class Ball
 		if(this.isMainBall === true)
 		{
 			if(this.side === "left")
-				{
-					leftPlayer.createEffect();
-				}
-				else
-				{
-					rightPlayer.createEffect();
-				}
+			{
+				leftPlayer.createEffect();
+			}
+			else
+			{
+				rightPlayer.createEffect();
+			}
 		}
 
+		//Reveals to the player if this ball is fake
 		if(this.isFake)
 		{
 			this.sprite.color = 'white';
@@ -477,24 +504,24 @@ class Ball
 }
 
 //Constant variables
-const maxPaddles = 4;
-const maxBalls = 100;
-const winningScore = 25;
-const bounceThreshold = 3;
-const effectCount = 10;
-const baseEffectTimer = 120;
-const globalEffectCount = 10;
+const maxPaddles = 4; //Maximum number of paddles the player may have at a time
+const maxBalls = 100; //Maximum number of balls that may be on the field at once.
+const winningScore = 25; //The score required to win
+const bounceThreshold = 3; //Number of times the main ball must bounce to cause a global effect
+const effectCount = 10; //The number of player effects in the game
+const baseEffectTimer = 120; //How long should effect text be displayed before being reset?
+const globalEffectCount = 10; //The number of global effects in the game
 
 //Other variables
-let gameOver = false;
-let winningPlayer;
-let jumpscare = false;
-let partyModeState = -1;
-let deathHasBeenChosen = false;
+let gameOver = false; //Whether the game has ended
+let winningPlayer; //The player that won
+let jumpscare = false; //Whether the jumpscare effect is playing
+let partyModeState = -1; //Determines what should happen while party mode is active
+let deathHasBeenChosen = false; //Prevents more than one death ball from being created
 
 //Canvas variables
-let playArea = 400;
-const maxArea = 800;
+let playArea = 400; //Size of the play area
+const maxArea = 800; //Max size of the play area
 const canvasArea = 1000;
 let upperBounds = (canvasArea / 2) - (playArea / 2) + 5; //The upper and left border
 let lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; //The lower and right border
@@ -601,13 +628,14 @@ function draw() {
 	stroke('white');
 	rect(canvasArea / 2, canvasArea / 2, playArea, playArea);
 
-	//Creates the score trackers
+	//Creates the shield trackers
 	textSize(24);
 	fill('blue');
 	stroke('blue');
 	text(leftPlayer.shieldCount,150,50);
 	text(rightPlayer.shieldCount,canvasArea - 150,50);
 
+	//Creates the score trackers
 	textSize(48);
 	fill('white');
 	stroke('white');
@@ -616,7 +644,7 @@ function draw() {
 	
 	//Create the effect Trackers
 	effectTimer--;
-	if(effectTimer <= 0)
+	if(effectTimer <= 0) //Reset all trackers when timer runs out
 	{
 		leftEffectText = "";
 		rightEffectText = "";
@@ -624,16 +652,20 @@ function draw() {
 		leftTextColor = "white";
 		rightTextColor = "white";
 	}
+
 	fill(leftTextColor);
 	stroke(leftTextColor);
 	text(leftEffectText, 200,100);
+
 	fill(rightTextColor);
 	stroke(rightTextColor);
 	text(rightEffectText,canvasArea - 200, 100);
+
 	fill('white');
 	stroke('white');
 	text(centerEffectText, canvasArea / 2, 50);
 
+	//Displays the victor when the game has ended
 	if(gameOver)
 	{
 		textSize(96);
@@ -672,6 +704,7 @@ function draw() {
 		});
 	}
 
+	//Runs once a player has interacted with the controls
 	if(hasInteracted === true)
 	{
 		//Make every ball in play move
@@ -686,11 +719,13 @@ function draw() {
 		soundBackground.play();
 	}
 
+	//if a jumpscare is playing, animate it.
 	if(jumpscare)
 	{
 		animation(jumpscareAnimation, canvasArea / 2, canvasArea / 2, 0, 8, 8);
 	}
 
+	//Play deaths theme when its in play
 	if(deathHasBeenChosen)
 	{
 		soundClose.play();
@@ -716,7 +751,7 @@ function onPaddleCollision(targetBall, targetPaddle)
 function createGlobalEffect()
 {
 	switch(Math.floor(random(0,globalEffectCount))){
-		case 0:
+		case 0: //Create 6 balls with trajectories that look like explosions
 			centerEffectText = "Ballsplosion";
 			balls[ballCount] = new Ball(canvasArea / 2, canvasArea / 2, 5, ballCount);
 			balls[ballCount].ySpeed = 1.0;
@@ -736,7 +771,7 @@ function createGlobalEffect()
 			balls[ballCount + 5].ySpeed = 1.0;
 			ballCount += 6;
 			break;
-		case 1:
+		case 1: //Create 2  paddles in the middle of the area that last for 10 seconds
 			if(typeof leftPlayer.paddles[3] === 'undefined')
 			{
 				centerEffectText = "Wii Sports";
@@ -757,7 +792,7 @@ function createGlobalEffect()
 				createGlobalEffect();
 			}
 			break;
-		case 2:
+		case 2: //Jumpscare and stun both players
 			jumpscare = true;
 			soundJumpscare.play();
 			leftPlayer.stunPaddles(1500);
@@ -766,7 +801,7 @@ function createGlobalEffect()
 				jumpscareTimer();
 			}, 1500);
 			break;
-		case 3:
+		case 3: //Increase the size of the play area
 			if(playArea < maxArea)
 			{
 				centerEffectText = "Bigger Area";
@@ -781,7 +816,7 @@ function createGlobalEffect()
 				createGlobalEffect();
 			}
 			break;
-		case 4:
+		case 4: //Decrease the size of the play area
 			if(playArea > 200)
 			{
 				centerEffectText = "Smaller Area";
@@ -790,7 +825,10 @@ function createGlobalEffect()
 				lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; 
 				leftPlayer.adjustPaddleLocations("left");
 				rightPlayer.adjustPaddleLocations("right");
+
+				//Make sure balls don't end up oob
 				balls.forEach(element => {
+					//Checks if a ball is horizontally oob
 					if(element.side === "left")
 					{
 						element.sprite.x += 50;
@@ -800,6 +838,7 @@ function createGlobalEffect()
 						element.sprite.x -= 50;
 					}
 
+					//Checks if a ball is vertically oob
 					if(element.sprite.y > lowerBounds)
 					{
 						element.sprite.y -= 50;
@@ -815,7 +854,7 @@ function createGlobalEffect()
 				createGlobalEffect();
 			}
 			break;
-		case 5:
+		case 5: //Increment the speed of all balls
 			centerEffectText = "Faster Balls";
 			balls.forEach(element => {
 				if(element.xSpeed > 0)
@@ -828,7 +867,7 @@ function createGlobalEffect()
 				}
 			});
 			break;
-		case 6:
+		case 6: //Set the speed of all balls to the MAX
 			centerEffectText = "Rocket Balls";
 			balls.forEach(element => {
 				if(element.xSpeed > 0)
@@ -841,7 +880,8 @@ function createGlobalEffect()
 				}
 			});
 			break;
-		case 7:
+		case 7: //Activate party mode
+			//Only run if party mode is not currently active
 			if(partyModeState === -1)
 			{
 				centerEffectText = "Party Mode";
@@ -851,10 +891,14 @@ function createGlobalEffect()
 				setTimeout(() => {
 					removePartyMode();
 				}, 10000);
+
+				//Double the shield of both players and add 1
 				leftPlayer.shieldCount *= 2;
 				rightPlayer.shieldCount *= 2;
 				leftPlayer.addShield(1);
 				rightPlayer.addShield(1);
+
+				//Increment paddle speed and greatly increase paddle height
 				leftPlayer.paddles.forEach(element => {
 					element.speed++;
 					element.sprite.h += 50;
@@ -870,28 +914,29 @@ function createGlobalEffect()
 			}
 			
 			break;
-		case 8:
+		case 8: //Make all non-immortal balls in play immortal
 			if(ballCount > 1)
 			{
 				centerEffectText = "Immortal Balls";
 				balls.forEach(element => {
-					if(element.isDeath === false)
+					//Ignore if the ball is death or main ball
+					if(element.isDeath === false && element.isMainBall === false)
 					{
 						element.isImmortal = true;
 						element.sprite.color = "purple";
 						element.sprite.stroke = "purple";
 					}
 				});
-				balls[0].sprite.color = 'red';
 			}
 			else
 			{
 				createGlobalEffect();
 			}
 			break;
-		case 9:
+		case 9: //Create the death ball. If death ball already exists, increase its speed multiplier
 			soundDeath.play();
 
+			//Create the death ball if it doesn't exist
 			if(deathHasBeenChosen !== true)
 			{
 				centerEffectText = "Death Has Arrived";
@@ -904,7 +949,7 @@ function createGlobalEffect()
 				ballCount++;
 				deathHasBeenChosen = true;
 			}
-			else
+			else //Increase its speed multiplier
 			{
 				balls.forEach(element => {
 					if(element.isDeath)
@@ -915,17 +960,19 @@ function createGlobalEffect()
 				centerEffectText = "Death Grows Near";
 			}
 			break;
-		default:
+		default: //This should never run
 			console.log("FAILED TO CREATE EFFECT! SOMETHING WENT WRONG!")
 	}
 }
 
+//Removes a ball with the given index
 function removeBall(index)
 {
 	balls[index].sprite.remove();
 	balls.splice(index,1);
 	ballCount--;
 
+	//Decrease the index of all balls that had a higher index than this ball
 	balls.forEach(element => {
 		if(element.index > index)
 		{
@@ -934,6 +981,7 @@ function removeBall(index)
 	});
 }
 
+//Removes the paddles that were created by wii sports effect
 function removeWiiSportsPaddles()
 {
 	leftPlayer.paddles[3].sprite.remove();
@@ -943,13 +991,16 @@ function removeWiiSportsPaddles()
 	rightPlayer.paddles.splice(3,1);
 }
 
+//Remove the jumpscare
 function jumpscareTimer()
 {
 	jumpscare = false;
 }
 
+//Makes everything a party
 function partyMode()
 {
+	//Party state determines what color everything should become
 	if(partyModeState === 0)
 	{
 		balls.forEach(element => {
@@ -1053,14 +1104,16 @@ function partyMode()
 		partyModeState = 0;
 	}
 
+	//Runs 10 times per second while active.
 	if(partyModeState !== -1)
 	{
 		setTimeout(() => {
 			partyMode();
 		}, 100);
 	}
-	else
+	else //Time to end the party
 	{
+		//Reset the color of every ball
 		balls.forEach(element => {
 			if(element.isDeath)
 			{
@@ -1081,11 +1134,14 @@ function partyMode()
 		});
 		ball.sprite.color = "red";
 		ball.sprite.stroke = "red";
+
+		//Reset the color of the paddles
 		leftPlayer.resetPaddleColor();
 		rightPlayer.resetPaddleColor();
 	}
 }
 
+//Ends party mode
 function removePartyMode()
 {
 	partyModeState = -1;
