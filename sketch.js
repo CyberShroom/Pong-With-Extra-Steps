@@ -1,11 +1,13 @@
 //Player class
 class Player
 {
-	constructor()
+	constructor(playerPaddle)
 	{
 		this.points = 0; //The points the player has
-		this.paddles = new Array(maxPaddles);
+		this.paddle = playerPaddle;
 		this.paddleGroup = new Group();
+		this.paddleGroup.add(this.paddle.sprite);
+		this.middlePaddle;
 		this.shieldCount = 0; //The amount of shielding the player has
 		this.paddleCount = 1; 
 	}
@@ -48,44 +50,28 @@ class Player
 			case 0: //Increases the speed of the players paddle
 				this.setEffectText(ball.side, "Faster Paddles", "green");
 				soundGood.play();
-
-				//For each paddle, increase its speed
-				this.paddles.forEach(element => {
-					element.speed++;
-				});
+				this.paddle.speed++;
 				break;
 			case 1: //Decreases the speed of the players paddle
 				this.setEffectText(ball.side, "Slower Paddles", "red");
 				soundBad.play();
-
-				//For each paddle, decrease its speed
-				this.paddles.forEach(element => {
-					if(element.speed > 1)
-					{
-						element.speed--;
-					}
-				});
+				if(this.paddle.speed > 1)
+				{
+					this.paddle.speed--;
+				}
 				break;
 			case 2: //Increase the height of the players paddle
 				this.setEffectText(ball.side, "Longer Paddles", "green");
 				soundGood.play();
-
-				//For each paddle, increase its height
-				this.paddles.forEach(element => {
-					element.sprite.h += 10;
-				});
+				this.paddle.sprite.h += 10;
 				break;
 			case 3: //Decreases the height of the players paddle
 				this.setEffectText(ball.side, "Shorter Paddles", "red");
 				soundBad.play();
-
-				//For each paddle, decrease its height
-				this.paddles.forEach(element => {
-					if(element.h > 10)
-					{
-						element.sprite.h -= 10;
-					}
-				});
+				if(this.paddle.sprite.h > 10)
+				{
+					this.paddle.sprite.h -= 10;
+				}
 				break;
 			case 4: //Create a ball with the opposite y trajectory of the main ball
 				this.setEffectText(ball.side, "Richochet", "green");
@@ -111,28 +97,33 @@ class Player
 			case 7: //Fire 2 additional balls at opposite diagonals
 				this.setEffectText(ball.side, "Shotgun", "green");
 				soundGood.play();
-				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
-				balls[ballCount].ySpeed = 1;
+
 				//Check what side of the field the ball is on and change speed accordingly
 				if(ball.side === "left")
 				{
+					balls[ballCount] = new Ball(ball.sprite.x + 1, ball.sprite.y, ball.sprite.diameter, ballCount);
+					balls[ballCount].ySpeed = 1;
 					balls[ballCount].xSpeed = 0.75;
 				}
 				else
 				{
+					balls[ballCount] = new Ball(ball.sprite.x - 1, ball.sprite.y, ball.sprite.diameter, ballCount);
+					balls[ballCount].ySpeed = 1;
 					balls[ballCount].xSpeed = -0.75;
 				}
 				ballCount++;
 
-				balls[ballCount] = new Ball(ball.sprite.x, ball.sprite.y, ball.sprite.diameter, ballCount);
-				balls[ballCount].ySpeed = -1;
 				//Check what side of the field the ball is on and change speed accordingly
 				if(ball.side === "left")
 				{
+					balls[ballCount] = new Ball(ball.sprite.x + 1, ball.sprite.y, ball.sprite.diameter, ballCount);
+					balls[ballCount].ySpeed = -1;
 					balls[ballCount].xSpeed = 0.75;
 				}
 				else
 				{
+					balls[ballCount] = new Ball(ball.sprite.x - 1, ball.sprite.y, ball.sprite.diameter, ballCount);
+					balls[ballCount].ySpeed = -1;
 					balls[ballCount].xSpeed = -0.75;
 				}
 				ballCount++;
@@ -193,10 +184,8 @@ class Player
 		this.setEffectText(ball.side, "Stun Paddles for " + time / 1000 + " Seconds", "red");
 		soundStun.play();
 		
-		this.paddles.forEach(element => {
-			element.isStunned = true;
-			element.sprite.color = 'yellow';
-		});
+		this.paddle.isStunned = true;
+		this.changePaddleColor('yellow');
 
 		setTimeout(() => {
 			this.removeStun();
@@ -206,9 +195,11 @@ class Player
 	//Allows moving paddles again
 	removeStun()
 	{
-		this.paddles.forEach(element => {
-			element.isStunned = false;
-		});
+		this.paddle.isStunned = false;
+		if(typeof this.middlePaddle !== 'undefined')
+		{
+			this.middlePaddle.isStunned = false;
+		}
 
 		this.resetPaddleColor();
 	}
@@ -216,15 +207,31 @@ class Player
 	//Sets paddle color back to whatever color it should be
 	resetPaddleColor()
 	{
-		//All paddles are white by default
-		this.paddles.forEach(element => {
-			element.sprite.color = 'white';
-		});
+		this.paddle.sprite.color = 'white';
+		this.paddle.sprite.stroke = 'white';
+		if(typeof this.middlePaddle !== 'undefined')
+		{
+			this.middlePaddle.sprite.color = 'white';
+			this.middlePaddle.sprite.stroke = 'white';
+		}
 
 		//If the player has a shield, the paddle should be blue
 		if(this.shieldCount !== 0)
 		{
-			this.paddles[0].sprite.color = 'blue';
+			this.paddle.sprite.color = 'blue';
+			this.paddle.sprite.stroke = 'blue';
+		}
+
+		//If the paddle is stunned, it should be yellow
+		if(this.paddle.isStunned)
+		{
+			this.paddle.sprite.color = 'yellow';
+			this.paddle.sprite.stroke = 'yellow';
+			if(typeof this.middlePaddle !== 'undefined')
+			{
+				this.middlePaddle.sprite.color = 'yellow';
+				this.middlePaddle.sprite.stroke = 'yellow';
+			}
 		}
 	}
 
@@ -232,7 +239,7 @@ class Player
 	addShield(amount)
 	{
 		this.shieldCount += amount;
-		this.paddles[0].sprite.color = "blue";
+		this.paddle.sprite.color = "blue";
 		soundShield.play();
 	}
 
@@ -241,11 +248,32 @@ class Player
 	{
 		if(player === "left")
 		{
-			this.paddles[0].sprite.x = upperBounds + 5;
+			this.paddle.sprite.x = upperBounds + 5;
 		}
 		else
 		{
-			this.paddles[0].sprite.x = lowerBounds - 5;
+			this.paddle.sprite.x = lowerBounds - 5;
+		}
+	}
+
+	//Checks if middle paddle exists and moves it if it does
+	moveMiddlePaddle(isUp)
+	{
+		if(typeof this.middlePaddle !== 'undefined')
+		{
+			this.middlePaddle.movePaddle(isUp);
+		}
+	}
+
+	//Changes all paddle color to the given color
+	changePaddleColor(color)
+	{
+		this.paddle.sprite.color = color;
+		this.paddle.sprite.stroke = color;
+		if(typeof this.middlePaddle !== 'undefined')
+		{
+			this.middlePaddle.sprite.color = color;
+			this.middlePaddle.sprite.stroke = color;
 		}
 	}
 }
@@ -526,10 +554,6 @@ const canvasArea = 1000;
 let upperBounds = (canvasArea / 2) - (playArea / 2) + 5; //The upper and left border
 let lowerBounds = (canvasArea / 2) + (playArea / 2) - 5; //The lower and right border
 
-//The paddles
-let leftPaddle;
-let rightPaddle;
-
 //The ball
 let ball;
 let ballCount = 1;
@@ -594,21 +618,11 @@ function setup() {
 	jumpscareAnimation = loadAni("Pictures/jumpscare_animation_folder/frame0.jpg", 19);
 
 	//Players
-	leftPlayer = new Player();
-	rightPlayer = new Player();
+	leftPlayer = new Player(new Paddle(upperBounds + 5, canvasArea / 2, 10, 50));
+	rightPlayer = new Player(new Paddle(lowerBounds - 5, canvasArea / 2, 10, 50));
 
 	//Create Sprite Groups
 	ballGroup = new Group();
-
-	//Create the paddles and add them to their array and group
-	leftPaddle = new Paddle(upperBounds + 5, canvasArea / 2, 10, 50);
-	rightPaddle = new Paddle(lowerBounds - 5, canvasArea / 2, 10, 50);
-
-	leftPlayer.paddles[0] = leftPaddle;
-	leftPlayer.paddleGroup.add(leftPaddle.sprite);
-
-	rightPlayer.paddles[0] = rightPaddle;
-	rightPlayer.paddleGroup.add(rightPaddle.sprite);
 
 	//Create the ball
 	ball = new Ball(canvasArea / 2, canvasArea / 2, 5, 0);
@@ -676,32 +690,28 @@ function draw() {
 	if(keyIsDown("87"))
 	{
 		hasInteracted = true;
-		leftPlayer.paddles.forEach(element => {
-			element.movePaddle(true);
-		});
+		leftPlayer.paddle.movePaddle(true);
+		leftPlayer.moveMiddlePaddle(true);
 	}
 	if(keyIsDown("83"))
 	{
 		hasInteracted = true;
-		leftPlayer.paddles.forEach(element => {
-			element.movePaddle(false);
-		});
+		leftPlayer.paddle.movePaddle(false);
+		leftPlayer.moveMiddlePaddle(false);
 	}
 
 	//Player 2 controls
 	if(keyIsDown(UP_ARROW))
 	{
 		hasInteracted = true;
-		rightPlayer.paddles.forEach(element => {
-			element.movePaddle(true);
-		});
+		rightPlayer.paddle.movePaddle(true);
+		rightPlayer.moveMiddlePaddle(true);
 	}
 	if(keyIsDown(DOWN_ARROW))
 	{
 		hasInteracted = true;
-		rightPlayer.paddles.forEach(element => {
-			element.movePaddle(false);
-		});
+		rightPlayer.paddle.movePaddle(false);
+		rightPlayer.moveMiddlePaddle(false);
 	}
 
 	//Runs once a player has interacted with the controls
@@ -772,16 +782,17 @@ function createGlobalEffect()
 			ballCount += 6;
 			break;
 		case 1: //Create 2  paddles in the middle of the area that last for 10 seconds
-			if(typeof leftPlayer.paddles[3] === 'undefined')
+			console.log("WII");
+			if(typeof leftPlayer.middlePaddle === 'undefined')
 			{
 				centerEffectText = "Wii Sports";
 				soundWii.play();
 
-				leftPlayer.paddles[3] = new Paddle(canvasArea / 2 - 25, canvasArea / 2, 10, 50);
-				leftPlayer.paddleGroup.add(leftPlayer.paddles[3].sprite);
+				leftPlayer.middlePaddle = new Paddle(canvasArea / 2 - 25, canvasArea / 2, 10, 50);
+				leftPlayer.paddleGroup.add(leftPlayer.middlePaddle.sprite);
 
-				rightPlayer.paddles[3] = new Paddle(canvasArea / 2 + 25, canvasArea / 2, 10, 50);
-				rightPlayer.paddleGroup.add(rightPlayer.paddles[3].sprite);
+				rightPlayer.middlePaddle = new Paddle(canvasArea / 2 + 25, canvasArea / 2, 10, 50);
+				rightPlayer.paddleGroup.add(rightPlayer.middlePaddle.sprite);
 
 				setTimeout(() => {
 					removeWiiSportsPaddles();
@@ -899,14 +910,10 @@ function createGlobalEffect()
 				rightPlayer.addShield(1);
 
 				//Increment paddle speed and greatly increase paddle height
-				leftPlayer.paddles.forEach(element => {
-					element.speed++;
-					element.sprite.h += 50;
-				});
-				rightPlayer.paddles.forEach(element => {
-					element.speed++;
-					element.sprite.h += 50;
-				});
+				leftPlayer.paddle.speed++;
+				leftPlayer.paddle.sprite.h += 50;
+				rightPlayer.paddle.speed++;
+				rightPlayer.paddle.sprite.h += 50;
 			}
 			else
 			{
@@ -984,11 +991,11 @@ function removeBall(index)
 //Removes the paddles that were created by wii sports effect
 function removeWiiSportsPaddles()
 {
-	leftPlayer.paddles[3].sprite.remove();
-	leftPlayer.paddles.splice(3,1);
+	leftPlayer.middlePaddle.sprite.remove();
+	delete leftPlayer.middlePaddle;
 
-	rightPlayer.paddles[3].sprite.remove();
-	rightPlayer.paddles.splice(3,1);
+	rightPlayer.middlePaddle.sprite.remove();
+	delete rightPlayer.middlePaddle;
 }
 
 //Remove the jumpscare
@@ -1007,14 +1014,8 @@ function partyMode()
 			element.sprite.color = "orange";
 			element.sprite.stroke = "orange";
 		});
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "blue";
-			element.sprite.stroke = "blue";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "blue";
-			element.sprite.stroke = "blue";
-		});
+		leftPlayer.changePaddleColor('blue');
+		rightPlayer.changePaddleColor('blue');
 
 		partyModeState = 1;
 	}
@@ -1024,14 +1025,8 @@ function partyMode()
 			element.sprite.color = "yellow";
 			element.sprite.stroke = "yellow";
 		});
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "green";
-			element.sprite.stroke = "green";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "green";
-			element.sprite.stroke = "green";
-		});
+		leftPlayer.changePaddleColor('green');
+		rightPlayer.changePaddleColor('green');
 
 		partyModeState = 2;
 	}
@@ -1041,14 +1036,8 @@ function partyMode()
 			element.sprite.color = "green";
 			element.sprite.stroke = "green";
 		});
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "yellow";
-			element.sprite.stroke = "yellow";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "yellow";
-			element.sprite.stroke = "yellow";
-		});
+		leftPlayer.changePaddleColor('yellow');
+		rightPlayer.changePaddleColor('yellow');
 
 		partyModeState = 3;
 	}
@@ -1058,14 +1047,8 @@ function partyMode()
 			element.sprite.color = "blue";
 			element.sprite.stroke = "blue";
 		});
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "orange";
-			element.sprite.stroke = "orange";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "orange";
-			element.sprite.stroke = "orange";
-		});
+		leftPlayer.changePaddleColor('orange');
+		rightPlayer.changePaddleColor('orange');
 
 		partyModeState = 4;
 	}
@@ -1075,14 +1058,8 @@ function partyMode()
 			element.sprite.color = "purple";
 			element.sprite.stroke = "purple";
 		});
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "red";
-			element.sprite.stroke = "red";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "red";
-			element.sprite.stroke = "red";
-		});
+		leftPlayer.changePaddleColor('red');
+		rightPlayer.changePaddleColor('red');
 
 		partyModeState = 5;
 	}
@@ -1092,14 +1069,8 @@ function partyMode()
 			element.sprite.color = "red";
 			element.sprite.stroke = "red";
 		});
-		leftPlayer.paddles.forEach(element => {
-			element.sprite.color = "purple";
-			element.sprite.stroke = "purple";
-		});
-		rightPlayer.paddles.forEach(element => {
-			element.sprite.color = "purple";
-			element.sprite.stroke = "purple";
-		});
+		leftPlayer.changePaddleColor('purple');
+		rightPlayer.changePaddleColor('purple');
 
 		partyModeState = 0;
 	}
